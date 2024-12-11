@@ -1,0 +1,37 @@
+﻿@model IEnumerable<BerberSalonu.Models.Berber>
+
+@* <table class="table">
+    <thead>
+        <tr>
+            <th>Ad</th>
+            <th>Yetenekler</th>
+            <th>Yas</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var berber in Model)
+        {
+            <tr>
+                <td>@berber.Name</td>
+                <td>
+                    @if (berber.Yetenekler != null && berber.Yetenekler.Any())
+                    {
+                        <ul>
+                            @foreach (var yetenek in berber.Yetenekler)
+                            {
+                                <li>@yetenek.Name</li>
+                            }
+                        </ul>
+
+                        <td>@berber.Age</td>
+                    }
+                    else
+                    {
+                        <span>Yetenek yok</span>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+ *@
