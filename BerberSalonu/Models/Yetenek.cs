@@ -10,5 +10,6 @@ namespace BerberSalonu.Models
         [JsonIgnore]
 
         public ICollection<Berber> Berberler { get; set; } = new List<Berber>();
+        public ICollection<Randevu> Randevular { get; set; } = new List<Randevu>();
     }
 }

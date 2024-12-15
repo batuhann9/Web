@@ -12,6 +12,7 @@ namespace BerberSalonu.Veritabanı
         public DbSet<Yetenek> Yetenekler { get; set; }
         public DbSet<Rol> Roller{ get; set; }
         public DbSet<Kullanici> Kullanicilar { get; set; }
+        public DbSet<Randevu> Randevular {  get; set; }
 
     }
 }

@@ -7,5 +7,6 @@
 
         public ICollection<Yetenek> Yetenekler { get; set; } = new List<Yetenek>();
         public ICollection<Randevu> Randevular { get; set; } = new List<Randevu>();
+
     }
 }
