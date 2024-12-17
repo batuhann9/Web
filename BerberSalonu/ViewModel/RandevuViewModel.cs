@@ -7,6 +7,8 @@ namespace BerberSalonu.ViewModel
 {
     public class RandevuViewModel
     {
+        public int MusteriId {  get; set; }
+
         [Required(ErrorMessage = "Lütfen bir yetenek seçin.")]
         public int YetenekId { get; set; }
 
@@ -18,7 +20,7 @@ namespace BerberSalonu.ViewModel
         public DateTime RandevuTarihi { get; set; }
 
         // Dropdown'lar için listeler
-        public List<Yetenek> Yetenekler { get; set; }
-        public List<Berber> Berberler { get; set; }
+        public List<Berber> Berberler { get; set; } = new List<Berber>();
+        public List<Yetenek> Yetenekler { get; set; } = new List<Yetenek>();
     }
 }

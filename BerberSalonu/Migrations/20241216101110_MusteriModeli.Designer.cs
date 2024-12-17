@@ -3,6 +3,7 @@ using System;
 using BerberSalonu.Veritabanı;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BerberSalonu.Migrations
 {
     [DbContext(typeof(BerberContext))]
-    partial class BerberContextModelSnapshot : ModelSnapshot
+    [Migration("20241216101110_MusteriModeli")]
+    partial class MusteriModeli
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,29 +41,6 @@ namespace BerberSalonu.Migrations
                     b.HasIndex("KullaniciId");
 
                     b.ToTable("Berberler");
-                });
-
-            modelBuilder.Entity("BerberSalonu.Models.BerberYetenek", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("BerberId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("YetenekId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BerberId");
-
-                    b.HasIndex("YetenekId");
-
-                    b.ToTable("BerberYetenekler");
                 });
 
             modelBuilder.Entity("BerberSalonu.Models.Kullanici", b =>
@@ -209,25 +189,6 @@ namespace BerberSalonu.Migrations
                         .IsRequired();
 
                     b.Navigation("Kullanici");
-                });
-
-            modelBuilder.Entity("BerberSalonu.Models.BerberYetenek", b =>
-                {
-                    b.HasOne("BerberSalonu.Models.Berber", "Berber")
-                        .WithMany()
-                        .HasForeignKey("BerberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BerberSalonu.Models.Yetenek", "Yetenek")
-                        .WithMany()
-                        .HasForeignKey("YetenekId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Berber");
-
-                    b.Navigation("Yetenek");
                 });
 
             modelBuilder.Entity("BerberSalonu.Models.Kullanici", b =>

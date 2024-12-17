@@ -1,15 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization; // Eklendi
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BerberSalonu.Models;
 using BerberSalonu.ViewModel;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System;
+using System.Security.Claims;
 using BerberSalonu.Veritabanı;
 
 namespace BerberSalonu.Controllers
 {
-    [Authorize(Roles = "Müşteri")] // Sadece "Musteri" rolüne izin verildi
+    [Authorize(Roles = "Müşteri")]
     public class RandevuController : Controller
     {
         private readonly BerberContext _context;
@@ -24,27 +23,83 @@ namespace BerberSalonu.Controllers
         {
             var viewModel = new RandevuViewModel
             {
-                Yetenekler = _context.Yetenekler.ToList(), // Yetenekler dropdown için
-                Berberler = new List<Berber>()            // Başlangıçta boş olacak
+                Yetenekler = _context.Yetenekler.ToList()
             };
 
             return View(viewModel);
         }
 
-        // GET: BerberleriGetir (yetenekId ile filtrelenmiş Berberler)
+        // GET: BerberleriGetir
         public IActionResult BerberleriGetir(int yetenekId)
         {
             var berberler = _context.Berberler
-                .Include(b => b.Kullanici) // Kullanıcı bilgilerini dahil et
-                .Where(b => b.Yetenekler.Any(y => y.Id == yetenekId)) // Yeteneğe göre filtrele
+                .Include(b => b.Kullanici)
+                .Where(b => b.Yetenekler.Any(y => y.Id == yetenekId))
                 .Select(b => new
                 {
                     b.Id,
-                    Ad = b.Kullanici.Ad + " " + b.Kullanici.Soyad // Kullanıcı adını birleştir
+                    Ad = b.Kullanici.Ad + " " + b.Kullanici.Soyad
                 })
                 .ToList();
 
             return Json(berberler);
+        }
+
+        // POST: RandevuOlustur
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RandevuOlustur(RandevuViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    // Kullanıcı kimliğini al
+                    var kullaniciEposta = User.Identity.Name;
+
+                    if (string.IsNullOrEmpty(kullaniciEposta))
+                    {
+                        TempData["Hata"] = "Kimlik doğrulama hatası. Lütfen tekrar giriş yapın.";
+                        return RedirectToAction("Giris", "Hesap");
+                    }
+
+                    // Kullanıcıdan müşteri bilgilerini al
+                    var musteri = await _context.Musteriler
+                        .Include(m => m.Kullanici)
+                        .FirstOrDefaultAsync(m => m.Kullanici.Eposta == kullaniciEposta);
+
+                    if (musteri == null)
+                    {
+                        TempData["Hata"] = "Müşteri bilgisi bulunamadı.";
+                        return RedirectToAction("Giris", "Hesap");
+                    }
+
+                    // Yeni randevuyu oluştur
+                    var yeniRandevu = new Randevu
+                    {
+                        MusteriId = musteri.Id,
+                        YetenekId = model.YetenekId,
+                        BerberId = model.BerberId,
+                        RandevuTarihi = model.RandevuTarihi
+                    };
+
+                    _context.Randevular.Add(yeniRandevu);
+                    await _context.SaveChangesAsync();
+
+                    TempData["Mesaj"] = "Randevu başarıyla oluşturuldu.";
+                    return RedirectToAction("Index", "Home");
+                }
+                catch (Exception ex)
+                {
+                    TempData["Hata"] = $"Bir hata oluştu: {ex.Message}";
+                }
+            }
+
+            // Hata durumunda dropdown'ları tekrar doldur
+            model.Yetenekler = _context.Yetenekler.ToList();
+            model.Berberler = new List<Berber>();
+
+            return View(model);
         }
     }
 }

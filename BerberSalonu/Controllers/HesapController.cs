@@ -51,8 +51,14 @@ namespace BerberSalonu.Controllers
                 SifreHashi = hash,
                 Rol = rol!
             };
+            // Yeni müşteri oluşturma (Kullanıcı ile ilişkilendirme)
+            var yeniMusteri = new Musteri
+            {
+                Kullanici = yeni
+            };
 
-            _context.Add(yeni);
+            _context.Musteriler.Add(yeniMusteri);
+            _context.Kullanicilar.Add(yeni);
             await _context.SaveChangesAsync();
 
             return RedirectToAction("Index", "Home");

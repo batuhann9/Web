@@ -6,8 +6,8 @@ public class Randevu
     public int Id { get; set; }
 
     [Required]
-    public int KullaniciId { get; set; }
-    public Kullanici Kullanici { get; set; }
+    public int MusteriId { get; set; }
+    public Musteri Musteri { get; set; }
 
     [Required]
     public int BerberId { get; set; }
@@ -19,4 +19,5 @@ public class Randevu
 
     [Required]
     public DateTime RandevuTarihi { get; set; }
+    public bool IsOnaylandi { get; set; } = false; // Onay durumu (varsayılan: false)
 }

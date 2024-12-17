@@ -90,12 +90,21 @@ namespace BerberSalonu.Controllers
                 var yetenek = _context.Yetenekler
                     .FirstOrDefault(y => y.Id == model.YetenekId);
 
-                // Berber ve Yetenek varsa, ilişkiyi ekleyin
+                // Berber ve Yetenek varsa, ilişkili tabloya ekleyin
                 if (berber != null && yetenek != null)
                 {
-                    if (!berber.Yetenekler.Any(y => y.Id == model.YetenekId))
+                    var mevcutIliski = _context.BerberYetenekler
+                        .FirstOrDefault(b => b.BerberId == model.BerberId && b.YetenekId == model.YetenekId);
+
+                    if (mevcutIliski == null)
                     {
-                        berber.Yetenekler.Add(yetenek);
+                        var yeniIliski = new BerberYetenek
+                        {
+                            BerberId = model.BerberId,
+                            YetenekId = model.YetenekId
+                        };
+
+                        _context.BerberYetenekler.Add(yeniIliski);
                         _context.SaveChanges();
                     }
                     else
@@ -103,29 +112,18 @@ namespace BerberSalonu.Controllers
                         ModelState.AddModelError("", "Bu yetenek zaten eklenmiş!");
                         return View(model);
                     }
-                    return RedirectToAction("Index"); // Yönlendirme yapılabilir
+
+                    return RedirectToAction("Index"); // Başarılı yönlendirme
                 }
                 else
                 {
-                    // Burada hata mesajı ekleyebilirsiniz
                     ModelState.AddModelError("", "Geçersiz veriler!");
                 }
             }
 
-            // Hatalı durumda formu tekrar göster
             return View(model);
         }
 
-        [HttpGet("Berber/Yetenek")]
-        public async Task<IActionResult> Yetenekler()
-        {
-            var berberler = await _context.Berberler
-                .Include(k => k.Kullanici)
-                .Include(b => b.Yetenekler)
-                .ToListAsync();
-
-            return Ok(berberler);
-        }
     }
 }
 
