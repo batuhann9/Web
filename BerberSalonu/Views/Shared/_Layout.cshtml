@@ -21,10 +21,7 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Hizmetlerimiz">Hizmetlerimiz</a>
                         </li>
                         @{
                             if (!User.Identity.IsAuthenticated)
@@ -49,16 +46,38 @@
                             if (User.Identity.IsAuthenticated)
                             {
                                 var rol = @User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+                                var ad = @User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
 
                                 <li class="nav-item mt-2">
-                                    <p class="text-success">@rol</p>
+                                    <p class="text-success">@rol @ad</p>
                                 </li>
-
+                                if(rol == "Müşteri")
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-area="" asp-controller="Randevu" asp-action="RandevuOlustur">Randevu Oluştur</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-area="" asp-controller="Randevu" asp-action="Randevularim">Randevularim</a>
+                                    </li>
+                                }
                                 if (rol == "Admin")
                                 {
                                     <li class="nav-item">
                                         <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="BerberEkle">Berber Ekle</a>
                                     </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="YetenekEkle">Berber Yetenek Ekle</a>
+                                    </li>
+                                }
+                                if (rol=="Berber")
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-area="" asp-controller="Berber" asp-action="RandevuTalepleri">Randevu Talepleri</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link text-dark" asp-area="" asp-controller="Berber" asp-action="Randevularim">Randevularim</a>
+                                    </li>
+                                    
                                 }
                             }
                         }
@@ -75,7 +94,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2024 - BerberSalonu - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2024 - BerberSalonu
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

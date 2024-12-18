@@ -1,0 +1,30 @@
+﻿@model List<BerberSalonu.Models.Randevu>
+
+<h1>Onaylanmış Randevularım</h1>
+
+@if (Model.Any())
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Müşteri Adı</th>
+                <th>Yetenek</th>
+                <th>Randevu Tarihi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var randevu in Model)
+            {
+                <tr>
+                    <td>@($"{randevu.Musteri.Kullanici.Ad} {randevu.Musteri.Kullanici.Soyad}")</td>
+                    <td>@randevu.Yetenek.Name</td>
+                    <td>@randevu.RandevuTarihi.ToString("dd/MM/yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Onaylanmış randevunuz bulunmamaktadır.</p>
+}

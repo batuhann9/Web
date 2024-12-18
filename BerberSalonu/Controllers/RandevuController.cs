@@ -101,5 +101,50 @@ namespace BerberSalonu.Controllers
 
             return View(model);
         }
+        // GET: Randevularım
+        public async Task<IActionResult> Randevularim()
+        {
+            // Oturumdaki kullanıcının kimliğini al
+            var kullaniciEposta = User.Identity.Name;
+
+            var musteri = await _context.Musteriler
+                .Include(m => m.Kullanici)
+                .FirstOrDefaultAsync(m => m.Kullanici.Eposta == kullaniciEposta);
+
+            if (musteri == null)
+            {
+                TempData["Hata"] = "Müşteri bulunamadı. Lütfen tekrar giriş yapın.";
+                return RedirectToAction("Giris", "Hesap");
+            }
+
+            // Onaylanmış randevuları getir
+            var randevular = await _context.Randevular
+                .Include(r => r.Berber)
+                .ThenInclude(b => b.Kullanici)
+                .Include(r => r.Yetenek)
+                .Where(r => r.MusteriId == musteri.Id && r.IsOnaylandi == true)
+                .ToListAsync();
+
+            return View(randevular);
+        }
+
+        // POST: Randevu Iptal Et
+        [HttpPost]
+        public async Task<IActionResult> RandevuIptal(int id)
+        {
+            var randevu = await _context.Randevular.FindAsync(id);
+
+            if (randevu == null)
+            {
+                TempData["Hata"] = "Randevu bulunamadı.";
+                return RedirectToAction("Randevularim");
+            }
+
+            _context.Randevular.Remove(randevu);
+            await _context.SaveChangesAsync();
+
+            TempData["Mesaj"] = "Randevu başarıyla iptal edildi.";
+            return RedirectToAction("Randevularim");
+        }
     }
 }

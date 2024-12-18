@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using BerberSalonu.Models;
 using BerberSalonu.Veritabanı;
-using BerberSalonu.Models;
-using System.Linq;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BerberSalonu.Controllers
 {
+    //[Authorize(Roles = "Berber")]
     public class BerberController : Controller
     {
         private readonly BerberContext _context;
@@ -15,61 +16,83 @@ namespace BerberSalonu.Controllers
             _context = context;
         }
 
-        // Randevuların onaylanması için ekranı getirme
-        public IActionResult OnayEkrani()
+        // Gelen randevu taleplerini listeleme
+        public async Task<IActionResult> RandevuTalepleri()
         {
-            // Bekleyen randevuları ve ilişkili müşteri ve yetenek bilgilerini al
-            var bekleyenRandevular = _context.Randevular
-                .Include(r => r.Musteri) // Müşteri bilgilerini dahil et
-                .Include(r => r.Yetenek) // Yetenek bilgilerini dahil et
-                .Where(r => !r.IsOnaylandi) // Onaylanmamış randevuları getir
-                .ToList();
+            var berberEmail = User.Identity.Name; // Oturumdaki berberin email'i
+            var berber = await _context.Berberler
+                .Include(b => b.Kullanici)
+                .FirstOrDefaultAsync(b => b.Kullanici.Eposta == berberEmail);
 
-            return View(bekleyenRandevular);
+            if (berber == null)
+            {
+                return RedirectToAction("Giris", "Hesap");
+            }
+
+            // Berberin onaylanmamış randevuları
+            var talepler = await _context.Randevular
+                .Include(r => r.Musteri)
+                .ThenInclude(m => m.Kullanici)
+                .Include(r => r.Yetenek)
+                .Where(r => r.BerberId == berber.Id && !r.IsOnaylandi)
+                .ToListAsync();
+
+            return View(talepler);
         }
 
-        // Randevuyu onaylamak için metot
+        // Randevu Onaylama
         [HttpPost]
-        public IActionResult Onayla(int id)
+        public async Task<IActionResult> RandevuOnayla(int id)
         {
-            var randevu = _context.Randevular
-                .Include(r => r.Musteri) // İlgili müşteri bilgisini de dahil et
-                .FirstOrDefault(r => r.Id == id); // Randevuyu id ile bul
+            var randevu = await _context.Randevular.FindAsync(id);
 
-            if (randevu == null)
-                return NotFound(); // Eğer randevu bulunamazsa 404 döner
+            if (randevu != null)
+            {
+                randevu.IsOnaylandi = true; // Randevuyu onayla
+                _context.Randevular.Update(randevu);
+                await _context.SaveChangesAsync();
+            }
 
-            // Randevuyu onayla
-            randevu.IsOnaylandi = true;
-
-            // Randevuyu veritabanına kaydet
-            _context.SaveChanges();
-
-            // Kullanıcıya bilgi mesajı göster
-            TempData["Mesaj"] = "Randevu başarıyla onaylandı.";
-
-            return RedirectToAction(nameof(OnayEkrani)); // Onay ekranına yönlendir
+            return RedirectToAction("RandevuTalepleri");
         }
 
-        // Randevuyu reddetmek için metot
+        // Randevu Reddetme
         [HttpPost]
-        public IActionResult Red(int id)
+        public async Task<IActionResult> RandevuReddet(int id)
         {
-            var randevu = _context.Randevular
-                .Include(r => r.Musteri) // İlgili müşteri bilgisini dahil et
-                .FirstOrDefault(r => r.Id == id); // Randevuyu id ile bul
+            var randevu = await _context.Randevular.FindAsync(id);
 
-            if (randevu == null)
-                return NotFound(); // Eğer randevu bulunamazsa 404 döner
+            if (randevu != null)
+            {
+                _context.Randevular.Remove(randevu); // Randevuyu sil
+                await _context.SaveChangesAsync();
+            }
 
-            // Randevuyu veritabanından sil
-            _context.Randevular.Remove(randevu);
-            _context.SaveChanges();
-
-            // Kullanıcıya bilgi mesajı göster
-            TempData["Mesaj"] = "Randevu başarıyla reddedildi.";
-
-            return RedirectToAction(nameof(OnayEkrani)); // Onay ekranına yönlendir
+            return RedirectToAction("RandevuTalepleri");
         }
+        // Onaylanmış randevuları listeleme
+        public async Task<IActionResult> Randevularim()
+        {
+            var berberEmail = User.Identity.Name; // Oturumdaki berberin email'i
+            var berber = await _context.Berberler
+                .Include(b => b.Kullanici)
+                .FirstOrDefaultAsync(b => b.Kullanici.Eposta == berberEmail);
+
+            if (berber == null)
+            {
+                return RedirectToAction("Giris", "Hesap");
+            }
+
+            // Berberin onaylanmış randevuları
+            var onaylanmisRandevular = await _context.Randevular
+                .Include(r => r.Musteri)
+                .ThenInclude(m => m.Kullanici)
+                .Include(r => r.Yetenek)
+                .Where(r => r.BerberId == berber.Id && r.IsOnaylandi)
+                .ToListAsync();
+
+            return View(onaylanmisRandevular);
+        }
+
     }
 }
