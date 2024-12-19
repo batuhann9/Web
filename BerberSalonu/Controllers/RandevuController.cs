@@ -4,7 +4,7 @@ using BerberSalonu.Models;
 using BerberSalonu.ViewModel;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using BerberSalonu.Veritabanı;
+using BerberSalonu.Veritabani;
 
 namespace BerberSalonu.Controllers
 {

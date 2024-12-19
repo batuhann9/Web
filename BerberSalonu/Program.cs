@@ -1,5 +1,4 @@
-using BerberSalonu.Veritabaný;
-using Microsoft.AspNetCore.Authentication;
+using BerberSalonu.Veritabani;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 

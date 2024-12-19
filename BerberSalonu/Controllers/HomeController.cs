@@ -1,9 +1,6 @@
 using BerberSalonu.Models;
-using BerberSalonu.Veritabaný;
-using BerberSalonu.vm;
-using Microsoft.AspNetCore.Authorization;
+using BerberSalonu.Veritabani;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 
 namespace BerberSalonu.Controllers

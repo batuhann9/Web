@@ -1,5 +1,5 @@
 ﻿using BerberSalonu.Models;
-using BerberSalonu.Veritabanı;
+using BerberSalonu.Veritabani;
 using BerberSalonu.ViewModel;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;

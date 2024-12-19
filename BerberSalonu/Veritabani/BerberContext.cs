@@ -1,7 +1,7 @@
 ﻿using BerberSalonu.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace BerberSalonu.Veritabanı
+namespace BerberSalonu.Veritabani
 {
     public class BerberContext : DbContext
     {

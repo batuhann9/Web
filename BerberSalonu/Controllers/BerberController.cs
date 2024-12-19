@@ -1,5 +1,4 @@
-﻿using BerberSalonu.Models;
-using BerberSalonu.Veritabanı;
+﻿using BerberSalonu.Veritabani;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
