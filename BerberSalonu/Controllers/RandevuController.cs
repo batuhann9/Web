@@ -18,20 +18,20 @@ namespace BerberSalonu.Controllers
         }
 
         // GET: RandevuOlustur
-        public IActionResult RandevuOlustur()
+        public async Task<IActionResult> RandevuOlustur()
         {
             var viewModel = new RandevuViewModel
             {
-                Yetenekler = _context.Yetenekler.ToList()
+                Yetenekler = await _context.Yetenekler.ToListAsync()
             };
 
             return View(viewModel);
         }
 
         // GET: BerberleriGetir
-        public IActionResult BerberleriGetir(int yetenekId)
+        public async Task<IActionResult> BerberleriGetir(int yetenekId)
         {
-            var berberler = _context.Berberler
+            var berberler = await _context.Berberler
                 .Include(b => b.Kullanici)
                 .Where(b => b.Yetenekler.Any(y => y.Id == yetenekId))
                 .Select(b => new
@@ -39,7 +39,7 @@ namespace BerberSalonu.Controllers
                     b.Id,
                     Ad = b.Kullanici.Ad + " " + b.Kullanici.Soyad
                 })
-                .ToList();
+                .ToListAsync();
 
             return Json(berberler);
         }
@@ -63,8 +63,8 @@ namespace BerberSalonu.Controllers
                     if (model.RandevuTarihi.Date < DateTime.Now.Date)
                     {
                         TempData["Hata"] = "Geçmiş bir tarihe randevu oluşturamazsınız.";
-                        model.Yetenekler = _context.Yetenekler.ToList();
-                        model.Berberler = _context.Berberler.ToList();
+                        model.Yetenekler = await _context.Yetenekler.ToListAsync();
+                        model.Berberler = await _context.Berberler.ToListAsync();
                         return View(model);
                     }
 
@@ -92,8 +92,8 @@ namespace BerberSalonu.Controllers
                     if (cakisanRandevu != null)
                     {
                         TempData["Hata"] = "Seçilen tarih ve saatte bu berber için başka bir onaylanmış randevu bulunuyor.";
-                        model.Yetenekler = _context.Yetenekler.ToList();
-                        model.Berberler = _context.Berberler.ToList();
+                        model.Yetenekler = await _context.Yetenekler.ToListAsync();
+                        model.Berberler = await _context.Berberler.ToListAsync();
                         return View(model);
                     }
 
@@ -117,8 +117,8 @@ namespace BerberSalonu.Controllers
                 }
             }
 
-            model.Yetenekler = _context.Yetenekler.ToList();
-            model.Berberler = _context.Berberler.ToList();
+            model.Yetenekler = await _context.Yetenekler.ToListAsync();
+            model.Berberler = await _context.Berberler.ToListAsync();
 
             return View(model);
         }
