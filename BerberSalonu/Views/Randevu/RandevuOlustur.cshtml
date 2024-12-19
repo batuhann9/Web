@@ -23,7 +23,7 @@
             <option value="">Lütfen bir yetenek seçin</option>
             @foreach (var yetenek in Model.Yetenekler)
             {
-                <option value="@yetenek.Id">@yetenek.Name</option>
+                <option value="@yetenek.Id"> @yetenek.Name - @yetenek.Price.ToString("C2")</option>
             }
         </select>
         <span asp-validation-for="YetenekId" class="text-danger"></span>
@@ -39,7 +39,12 @@
 
     <div class="form-group">
         <label for="RandevuTarihi">Randevu Tarihi ve Saati</label>
-        <input type="datetime-local" id="RandevuTarihi" class="form-control" asp-for="RandevuTarihi" />
+        <input type="datetime-local"
+               id="RandevuTarihi"
+               class="form-control"
+               asp-for="RandevuTarihi"
+               min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")"
+               max="@DateTime.Now.AddYears(1).Date.AddHours(22).ToString("yyyy-MM-ddTHH:mm")" />
         <span asp-validation-for="RandevuTarihi" class="text-danger"></span>
     </div>
 

@@ -3,6 +3,7 @@ using System;
 using BerberSalonu.Veritabanı;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BerberSalonu.Migrations
 {
     [DbContext(typeof(BerberContext))]
-    partial class BerberContextModelSnapshot : ModelSnapshot
+    [Migration("20241218104849_YeteneklereFiyatEklendi1812")]
+    partial class YeteneklereFiyatEklendi1812
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -182,9 +185,6 @@ namespace BerberSalonu.Migrations
 
                     b.Property<decimal>("Price")
                         .HasColumnType("numeric");
-
-                    b.Property<double>("Sure")
-                        .HasColumnType("double precision");
 
                     b.HasKey("Id");
 

@@ -123,6 +123,30 @@ namespace BerberSalonu.Controllers
 
             return View(model);
         }
+        [HttpGet("kazanclarilistele")]
+        public async Task<IActionResult> KazanclariListele()
+        {
+            // Berberlerin kazançlarını hesapla (Sadece onaylı randevular)
+            var kazancListesi = await _context.Randevular
+                .Include(r => r.Berber)   // Berber bilgilerini dahil et
+                .Include(r => r.Yetenek)  // Yetenek bilgilerini dahil et
+                .Where(r => r.IsOnaylandi == true)  // Sadece onaylanmış randevuları al
+                .GroupBy(r => r.BerberId)  // BerberId'ye göre grupla
+                .Select(g => new BerberKazanciViewModel
+                {
+                    BerberAd = g.FirstOrDefault().Berber.Kullanici.Ad + " " + g.FirstOrDefault().Berber.Kullanici.Soyad,
+                    ToplamKazanc = g.Sum(r => r.Yetenek.Price)  // Yeteneklerin fiyatlarını topla
+                }).ToListAsync();
+
+            // Admin paneli için model oluştur
+            var model = new AdminViewModel
+            {
+                BerberKazancListesi = kazancListesi
+            };
+
+            // View'e model gönder
+            return View(model);
+        }
 
     }
 }

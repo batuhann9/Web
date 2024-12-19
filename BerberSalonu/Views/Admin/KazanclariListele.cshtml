@@ -1,0 +1,25 @@
+﻿@model BerberSalonu.ViewModel.AdminViewModel
+
+@{
+    ViewData["Title"] = "Berber Kazançları";
+}
+
+<h2>Berber Kazançları</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Berber Adı</th>
+            <th>Toplam Kazanç</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.BerberKazancListesi)
+        {
+            <tr>
+                <td>@item.BerberAd</td>
+                <td>@item.ToplamKazanc.ToString("C")</td>  <!-- Para birimi formatında -->
+            </tr>
+        }
+    </tbody>
+</table>

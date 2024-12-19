@@ -45,7 +45,6 @@ namespace BerberSalonu.Controllers
             return Json(berberler);
         }
 
-        // POST: RandevuOlustur
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RandevuOlustur(RandevuViewModel model)
@@ -54,7 +53,6 @@ namespace BerberSalonu.Controllers
             {
                 try
                 {
-                    // Kullanıcı kimliğini al
                     var kullaniciEposta = User.Identity.Name;
 
                     if (string.IsNullOrEmpty(kullaniciEposta))
@@ -63,7 +61,6 @@ namespace BerberSalonu.Controllers
                         return RedirectToAction("Giris", "Hesap");
                     }
 
-                    // Kullanıcıdan müşteri bilgilerini al
                     var musteri = await _context.Musteriler
                         .Include(m => m.Kullanici)
                         .FirstOrDefaultAsync(m => m.Kullanici.Eposta == kullaniciEposta);
@@ -74,13 +71,49 @@ namespace BerberSalonu.Controllers
                         return RedirectToAction("Giris", "Hesap");
                     }
 
-                    // Yeni randevuyu oluştur
+                    if (model.RandevuTarihi.Date < DateTime.Now.Date)
+                    {
+                        TempData["Hata"] = "Geçmiş bir tarihe randevu oluşturamazsınız.";
+                        model.Yetenekler = _context.Yetenekler.ToList();
+                        model.Berberler = _context.Berberler.ToList();
+                        return View(model);
+                    }
+
+                    // Tarihi UTC olarak belirle
+                    var randevuBaslangic = DateTime.SpecifyKind(model.RandevuTarihi, DateTimeKind.Utc);
+
+                    // Yetenek süresi ile randevu bitişini belirle
+                    var yetenek = await _context.Yetenekler.FindAsync(model.YetenekId);
+                    if (yetenek == null)
+                    {
+                        TempData["Hata"] = "Seçilen yetenek bulunamadı.";
+                        return RedirectToAction("RandevuOlustur");
+                    }
+
+                    var randevuBitis = randevuBaslangic.AddMinutes(yetenek.Sure);
+
+                    // Çakışan onaylanmış randevuları kontrol et
+                    var cakisanRandevu = await _context.Randevular
+                        .Where(r => r.BerberId == model.BerberId
+                                    && r.IsOnaylandi
+                                    && r.RandevuTarihi < randevuBitis
+                                    && r.RandevuTarihi.AddMinutes(r.Yetenek.Sure) > randevuBaslangic)
+                        .FirstOrDefaultAsync();
+
+                    if (cakisanRandevu != null)
+                    {
+                        TempData["Hata"] = "Seçilen tarih ve saatte bu berber için başka bir onaylanmış randevu bulunuyor.";
+                        model.Yetenekler = _context.Yetenekler.ToList();
+                        model.Berberler = _context.Berberler.ToList();
+                        return View(model);
+                    }
+
                     var yeniRandevu = new Randevu
                     {
                         MusteriId = musteri.Id,
                         YetenekId = model.YetenekId,
                         BerberId = model.BerberId,
-                        RandevuTarihi = model.RandevuTarihi
+                        RandevuTarihi = randevuBaslangic
                     };
 
                     _context.Randevular.Add(yeniRandevu);
@@ -91,16 +124,16 @@ namespace BerberSalonu.Controllers
                 }
                 catch (Exception ex)
                 {
-                    TempData["Hata"] = $"Bir hata oluştu: {ex.Message}";
+                    TempData["Hata"] = $"Bir hata oluştu: {ex.InnerException?.Message ?? ex.Message}";
                 }
             }
 
-            // Hata durumunda dropdown'ları tekrar doldur
             model.Yetenekler = _context.Yetenekler.ToList();
-            model.Berberler = new List<Berber>();
+            model.Berberler = _context.Berberler.ToList();
 
             return View(model);
         }
+
         // GET: Randevularım
         public async Task<IActionResult> Randevularim()
         {

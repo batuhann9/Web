@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BerberSalonu.Controllers
 {
-    //[Authorize(Roles = "Berber")]
+    [Authorize(Roles = "Berber")]
     public class BerberController : Controller
     {
         private readonly BerberContext _context;
