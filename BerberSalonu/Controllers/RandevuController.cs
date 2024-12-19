@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using BerberSalonu.Models;
 using BerberSalonu.ViewModel;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using BerberSalonu.Veritabani;
 
 namespace BerberSalonu.Controllers
@@ -53,23 +52,13 @@ namespace BerberSalonu.Controllers
             {
                 try
                 {
-                    var kullaniciEposta = User.Identity.Name;
-
+                    var kullaniciEposta = GetKullaniciEposta();
                     if (string.IsNullOrEmpty(kullaniciEposta))
-                    {
-                        TempData["Hata"] = "Kimlik doğrulama hatası. Lütfen tekrar giriş yapın.";
                         return RedirectToAction("Giris", "Hesap");
-                    }
 
-                    var musteri = await _context.Musteriler
-                        .Include(m => m.Kullanici)
-                        .FirstOrDefaultAsync(m => m.Kullanici.Eposta == kullaniciEposta);
-
+                    var musteri = await GetMusteriAsync(kullaniciEposta);
                     if (musteri == null)
-                    {
-                        TempData["Hata"] = "Müşteri bilgisi bulunamadı.";
                         return RedirectToAction("Giris", "Hesap");
-                    }
 
                     if (model.RandevuTarihi.Date < DateTime.Now.Date)
                     {
@@ -137,21 +126,17 @@ namespace BerberSalonu.Controllers
         // GET: Randevularım
         public async Task<IActionResult> Randevularim()
         {
-            // Oturumdaki kullanıcının kimliğini al
-            var kullaniciEposta = User.Identity.Name;
-
-            var musteri = await _context.Musteriler
-                .Include(m => m.Kullanici)
-                .FirstOrDefaultAsync(m => m.Kullanici.Eposta == kullaniciEposta);
-
-            if (musteri == null)
-            {
-                TempData["Hata"] = "Müşteri bulunamadı. Lütfen tekrar giriş yapın.";
+            var kullaniciEposta = GetKullaniciEposta();
+            if (string.IsNullOrEmpty(kullaniciEposta))
                 return RedirectToAction("Giris", "Hesap");
-            }
+
+            var musteri = await GetMusteriAsync(kullaniciEposta);
+            if (musteri == null)
+                return RedirectToAction("Giris", "Hesap");
 
             // Onaylanmış randevuları getir
             var randevular = await _context.Randevular
+                .AsNoTracking()
                 .Include(r => r.Berber)
                 .ThenInclude(b => b.Kullanici)
                 .Include(r => r.Yetenek)
@@ -160,6 +145,7 @@ namespace BerberSalonu.Controllers
 
             return View(randevular);
         }
+
 
         // POST: Randevu Iptal Et
         [HttpPost]
@@ -179,5 +165,38 @@ namespace BerberSalonu.Controllers
             TempData["Mesaj"] = "Randevu başarıyla iptal edildi.";
             return RedirectToAction("Randevularim");
         }
+
+        private string? GetKullaniciEposta()
+        {
+            /* 
+             * Authorized endpoint altinda oldugumuz icin,
+             * Identity'nin varligindan eminiz.
+             */
+            var kullaniciEposta = User.Identity!.Name;
+
+            if (string.IsNullOrEmpty(kullaniciEposta))
+            {
+                TempData["Hata"] = "Kimlik doğrulama hatası. Lütfen tekrar giriş yapın.";
+                return null;
+            }
+
+            return kullaniciEposta;
+        }
+
+        private async Task<Musteri?> GetMusteriAsync(string kullaniciEposta)
+        {
+            var musteri = await _context.Musteriler
+                .Include(m => m.Kullanici)
+                .FirstOrDefaultAsync(m => m.Kullanici.Eposta == kullaniciEposta);
+
+            if (musteri == null)
+            {
+                TempData["Hata"] = "Müşteri bilgisi bulunamadı.";
+                return null;
+            }
+
+            return musteri;
+        }
+
     }
 }
