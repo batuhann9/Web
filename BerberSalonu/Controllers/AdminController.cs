@@ -64,13 +64,19 @@ namespace BerberSalonu.Controllers
             return RedirectToAction("Index", "Admin");
         }
 
-        [HttpGet("Berber/YetenekEkle")]
-        public async Task<IActionResult> YetenekEkle()
+        [HttpGet("Berber/YetenekEkle/{berberId?}")]
+        public async Task<IActionResult> YetenekEkle(int? berberId)
         {
+            if (!berberId.HasValue)
+            {
+                berberId = int.TryParse(Request.Query["BerberId"], out var id) ? id : null;
+            }
+
             var model = new BerberYetenekEkleViewModel();
-            await DoldurSelectListler(model);
+            await DoldurSelectListler(model, berberId);
             return View(model);
         }
+
 
         [HttpPost("Berber/YetenekEkle")]
         public async Task<IActionResult> YetenekEkle(BerberYetenekEkleViewModel model)
@@ -144,7 +150,7 @@ namespace BerberSalonu.Controllers
             return View(model);
         }
 
-        private async Task DoldurSelectListler(BerberYetenekEkleViewModel model)
+        private async Task DoldurSelectListler(BerberYetenekEkleViewModel model, int? berberId = null)
         {
             var berberler = await _context.Berberler
                 .AsNoTracking()
@@ -156,18 +162,39 @@ namespace BerberSalonu.Controllers
                 })
                 .ToListAsync();
 
-            var yetenekler = await _context.Yetenekler
-                .AsNoTracking()
-                .Select(y => new
-                {
-                    y.Id,
-                    Ad = y.Name
-                })
-                .ToListAsync();
-
             model.BerberlerSelectList = new SelectList(berberler, "Id", "FullName");
-            model.YeteneklerSelectList = new SelectList(yetenekler, "Id", "Ad");
+
+            if (berberId.HasValue)
+            {
+                var mevcutYetenekler = await _context.BerberYetenekler
+                    .AsNoTracking()
+                    .Where(by => by.BerberId == berberId.Value)
+                    .Select(by => by.YetenekId)
+                    .ToListAsync();
+
+                var yetenekler = await _context.Yetenekler
+                    .AsNoTracking()
+                    .Where(y => !mevcutYetenekler.Contains(y.Id))
+                    .Select(y => new
+                    {
+                        y.Id,
+                        Ad = y.Name
+                    })
+                    .ToListAsync();
+
+                model.YeteneklerSelectList = new SelectList(yetenekler, "Id", "Ad");
+
+                if (!yetenekler.Any())
+                {
+                    TempData["Bilgi"] = "Eklenebilecek başka bir yetenek yok.";
+                }
+            }
+            else
+            {
+                model.YeteneklerSelectList = new SelectList(Enumerable.Empty<SelectListItem>());
+            }
         }
+
 
     }
 }
