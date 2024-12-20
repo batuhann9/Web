@@ -1,5 +1,4 @@
-﻿using BerberSalonu.Models;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 
 namespace BerberSalonu.ViewModel

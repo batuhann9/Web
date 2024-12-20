@@ -1,15 +1,16 @@
 ﻿@using BerberSalonu.ViewModel
 @model BerberYetenekEkleViewModel
 
-@if (TempData["Mesaj"] != null)
+@if (TempData["Başarı"] != null)
 {
-     <div class="alert alert-success"> @TempData["Mesaj"] </div>
+    <div class="alert alert-success"> @TempData["Başarı"] </div>
+} else if (TempData["Hata"] != null) 
+{
+    <div class="alert alert-danger"> @TempData["Hata"] </div>
 }
 
 <form asp-action="YetenekEkle" method="post">
     @Html.AntiForgeryToken()
-
-    <div asp-validation-summary="All" class="text-danger"></div>
 
     <div class="form-group">
         <label asp-for="BerberId" class="control-label">Berber Seçin:</label>

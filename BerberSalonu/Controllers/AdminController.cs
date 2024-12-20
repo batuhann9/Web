@@ -67,32 +67,8 @@ namespace BerberSalonu.Controllers
         [HttpGet("Berber/YetenekEkle")]
         public async Task<IActionResult> YetenekEkle()
         {
-            var berberler = await _context.Berberler
-                .AsNoTracking()
-                .Include(b => b.Kullanici)
-                .Select(b => new {
-                    b.Id,
-                    FullName = b.Kullanici.Ad + " " + b.Kullanici.Soyad
-                })
-                .ToListAsync();
-
-            var yetenekler = await _context.Yetenekler
-                .AsNoTracking()
-                .Select(y => new {
-                    y.Id,
-                    Ad = y.Name
-                })
-                .ToListAsync();
-
-            var berberlerSelectList = new SelectList(berberler, "Id", "FullName");
-            var yeteneklerSelectList = new SelectList(yetenekler, "Id", "Ad");
-
-            var model = new BerberYetenekEkleViewModel
-            {
-                BerberlerSelectList = berberlerSelectList,
-                YeteneklerSelectList = yeteneklerSelectList
-            };
-
+            var model = new BerberYetenekEkleViewModel();
+            await DoldurSelectListler(model);
             return View(model);
         }
 
@@ -101,6 +77,7 @@ namespace BerberSalonu.Controllers
         {
             if (!ModelState.IsValid)
             {
+                await DoldurSelectListler(model);
                 return View(model);
             }
 
@@ -114,8 +91,8 @@ namespace BerberSalonu.Controllers
 
             if (berber == null || yetenek == null)
             {
-                ModelState.AddModelError("", "Geçersiz veriler!");
-                return View(model);
+                TempData["Hata"] = "Geçersiz veriler.";
+                return RedirectToAction(nameof(YetenekEkle));
             }
 
             var mevcutIliski = await _context.BerberYetenekler
@@ -124,7 +101,8 @@ namespace BerberSalonu.Controllers
 
             if (mevcutIliski != null)
             {
-                ModelState.AddModelError("", "Bu yetenek zaten eklenmiş!");
+                TempData["Hata"] = "Bu yetenek zaten eklenmiş!";
+                await DoldurSelectListler(model);
                 return View(model);
             }
 
@@ -137,7 +115,7 @@ namespace BerberSalonu.Controllers
             _context.BerberYetenekler.Add(yeniIliski);
             await _context.SaveChangesAsync();
 
-            TempData["Mesaj"] = "Berbere yetenek ekleme başarılı!";
+            TempData["Başarı"] = "Berbere yetenek ekleme başarılı!";
             return RedirectToAction(nameof(YetenekEkle));
         }
 
@@ -164,6 +142,31 @@ namespace BerberSalonu.Controllers
 
             // View'e model gönder
             return View(model);
+        }
+
+        private async Task DoldurSelectListler(BerberYetenekEkleViewModel model)
+        {
+            var berberler = await _context.Berberler
+                .AsNoTracking()
+                .Include(b => b.Kullanici)
+                .Select(b => new
+                {
+                    b.Id,
+                    FullName = b.Kullanici.Ad + " " + b.Kullanici.Soyad
+                })
+                .ToListAsync();
+
+            var yetenekler = await _context.Yetenekler
+                .AsNoTracking()
+                .Select(y => new
+                {
+                    y.Id,
+                    Ad = y.Name
+                })
+                .ToListAsync();
+
+            model.BerberlerSelectList = new SelectList(berberler, "Id", "FullName");
+            model.YeteneklerSelectList = new SelectList(yetenekler, "Id", "Ad");
         }
 
     }
