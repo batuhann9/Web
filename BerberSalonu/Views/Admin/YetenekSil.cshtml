@@ -7,19 +7,21 @@
 
 @if (TempData["Başarı"] != null)
 {
-    <div class="alert alert-success"> @TempData["Başarı"] </div>
-} else if (TempData["Hata"] != null) 
+        <div class="alert alert-success"> @TempData["Başarı"] </div>
+}
+else if (TempData["Hata"] != null)
 {
-    <div class="alert alert-danger"> @TempData["Hata"] </div>
-} else if (TempData["Bilgi"] != null) 
+        <div class="alert alert-danger"> @TempData["Hata"] </div>
+}
+else if (TempData["Bilgi"] != null)
 {
-    <div class="alert alert-warning"> @TempData["Bilgi"] </div>
+        <div class="alert alert-warning"> @TempData["Bilgi"] </div>
 }
 
-<h3>Berbere Yetenek Ekle</h3>
+<h3>Berberden Yetenek Sil</h3>
 <hr />
 
-<form asp-action="YetenekEkle" method="get">
+<form asp-action="YetenekSil" method="get">
     <div class="form-group">
         <label asp-for="BerberId" class="control-label">Berber Seçin:</label>
         <select asp-for="BerberId" class="form-control" asp-items="@Model.BerberlerSelectList" onchange="this.form.submit()">
@@ -28,7 +30,7 @@
     </div>
 </form>
 
-<form asp-action="YetenekEkle" method="post">
+<form asp-action="YetenekSil" method="post">
     @Html.AntiForgeryToken()
 
     <input type="hidden" asp-for="BerberId" />
@@ -37,11 +39,11 @@
         <label asp-for="YetenekId" class="control-label">Yetenek Seçin:</label>
         <select asp-for="YetenekId" 
             class="form-control" 
-            asp-items="@Model.YeteneklerSelectList" 
+            asp-items="@Model.YeteneklerSelectList"
             disabled=@yeteneklerDevreDisi>
         </select>
         <span asp-validation-for="YetenekId" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary mt-2" disabled=@yeteneklerDevreDisi>Kaydet</button>
+    <button type="submit" class="btn btn-danger mt-2" disabled=@yeteneklerDevreDisi>Sil</button>
 </form>

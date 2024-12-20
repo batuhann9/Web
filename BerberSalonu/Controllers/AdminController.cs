@@ -64,26 +64,20 @@ namespace BerberSalonu.Controllers
             return RedirectToAction("Index", "Admin");
         }
 
-        [HttpGet("Berber/YetenekEkle/{berberId?}")]
-        public async Task<IActionResult> YetenekEkle(int? berberId)
+        [HttpGet("Berber/YetenekEkle")]
+        public async Task<IActionResult> YetenekEkle([FromQuery] int? berberId)
         {
-            if (!berberId.HasValue)
-            {
-                berberId = int.TryParse(Request.Query["BerberId"], out var id) ? id : null;
-            }
-
             var model = new BerberYetenekEkleViewModel();
-            await DoldurSelectListler(model, berberId);
+            await EklenebilecekYeteneklerinSelectListiniGetir(model, berberId);
             return View(model);
         }
-
 
         [HttpPost("Berber/YetenekEkle")]
         public async Task<IActionResult> YetenekEkle(BerberYetenekEkleViewModel model)
         {
             if (!ModelState.IsValid)
             {
-                await DoldurSelectListler(model);
+                await EklenebilecekYeteneklerinSelectListiniGetir(model);
                 return View(model);
             }
 
@@ -108,7 +102,7 @@ namespace BerberSalonu.Controllers
             if (mevcutIliski != null)
             {
                 TempData["Hata"] = "Bu yetenek zaten eklenmiş!";
-                await DoldurSelectListler(model);
+                await EklenebilecekYeteneklerinSelectListiniGetir(model);
                 return View(model);
             }
 
@@ -123,6 +117,55 @@ namespace BerberSalonu.Controllers
 
             TempData["Başarı"] = "Berbere yetenek ekleme başarılı!";
             return RedirectToAction(nameof(YetenekEkle));
+        }
+
+        [HttpGet("Berber/YetenekSil")]
+        public async Task<IActionResult> YetenekSil([FromQuery] int? berberId)
+        {
+            var model = new BerberYetenekEkleViewModel();
+            await SilinebilecekYeteneklerinSelectListiniGetir(model, berberId);
+            return View(model);
+        }
+
+        [HttpPost("Berber/YetenekSil")]
+        public async Task<IActionResult> YetenekSil(BerberYetenekEkleViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                await SilinebilecekYeteneklerinSelectListiniGetir(model);
+                return View(model);
+            }
+
+            var berber = await _context.Berberler
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.Id == model.BerberId);
+
+            var yetenek = await _context.Yetenekler
+                .AsNoTracking()
+                .FirstOrDefaultAsync(y => y.Id == model.YetenekId);
+
+            if (berber == null || yetenek == null)
+            {
+                TempData["Hata"] = "Geçersiz veriler.";
+                return RedirectToAction(nameof(YetenekEkle));
+            }
+
+            var mevcutIliski = await _context.BerberYetenekler
+                .AsNoTracking()
+                .FirstOrDefaultAsync(b => b.BerberId == model.BerberId && b.YetenekId == model.YetenekId);
+
+            if (mevcutIliski == null)
+            {
+                TempData["Hata"] = "Bu yetenek zaten berbere ekli değil!";
+                await SilinebilecekYeteneklerinSelectListiniGetir(model);
+                return View(model);
+            }
+
+            _context.BerberYetenekler.Remove(mevcutIliski);
+            await _context.SaveChangesAsync();
+
+            TempData["Başarı"] = "Berberden yetenek silme başarılı!";
+            return RedirectToAction(nameof(YetenekSil));
         }
 
         [HttpGet("kazanclarilistele")]
@@ -150,7 +193,7 @@ namespace BerberSalonu.Controllers
             return View(model);
         }
 
-        private async Task DoldurSelectListler(BerberYetenekEkleViewModel model, int? berberId = null)
+        private async Task EklenebilecekYeteneklerinSelectListiniGetir(BerberYetenekEkleViewModel model,int? berberId = null)
         {
             var berberler = await _context.Berberler
                 .AsNoTracking()
@@ -186,7 +229,7 @@ namespace BerberSalonu.Controllers
 
                 if (!yetenekler.Any())
                 {
-                    TempData["Bilgi"] = "Eklenebilecek başka bir yetenek yok.";
+                    TempData["Bilgi"] = "Berbere eklenebilecek başka bir yetenek yok.";
                 }
             }
             else
@@ -195,6 +238,50 @@ namespace BerberSalonu.Controllers
             }
         }
 
+        private async Task SilinebilecekYeteneklerinSelectListiniGetir(BerberYetenekEkleViewModel model, int? berberId = null)
+        {
+            var berberler = await _context.Berberler
+                .AsNoTracking()
+                .Include(b => b.Kullanici)
+                .Select(b => new
+                {
+                    b.Id,
+                    FullName = b.Kullanici.Ad + " " + b.Kullanici.Soyad
+                })
+                .ToListAsync();
+
+            model.BerberlerSelectList = new SelectList(berberler, "Id", "FullName");
+
+            if (berberId.HasValue)
+            {
+                var mevcutYetenekler = await _context.BerberYetenekler
+                    .AsNoTracking()
+                    .Where(by => by.BerberId == berberId.Value)
+                    .Select(by => by.YetenekId)
+                    .ToListAsync();
+
+                var yetenekler = await _context.Yetenekler
+                    .AsNoTracking()
+                    .Where(y => mevcutYetenekler.Contains(y.Id))
+                    .Select(y => new
+                    {
+                        y.Id,
+                        Ad = y.Name
+                    })
+                    .ToListAsync();
+
+                model.YeteneklerSelectList = new SelectList(yetenekler, "Id", "Ad");
+
+                if (!yetenekler.Any())
+                {
+                    TempData["Bilgi"] = "Berberin silinebilecek herhangi bir yeteneği yok.";
+                }
+            }
+            else
+            {
+                model.YeteneklerSelectList = new SelectList(Enumerable.Empty<SelectListItem>());
+            }
+        }
 
     }
 }
