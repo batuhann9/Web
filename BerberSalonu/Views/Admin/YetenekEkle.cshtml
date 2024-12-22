@@ -1,49 +1,92 @@
-﻿﻿@using BerberSalonu.ViewModel
+﻿@using BerberSalonu.ViewModel
 @model BerberYetenekEkleViewModel
 
 @{
     bool yeteneklerDevreDisi = Model.YeteneklerSelectList == null || !Model.YeteneklerSelectList.Any();
 }
 
-@if (TempData["Başarı"] != null)
-{
-    <div class="alert alert-success"> @TempData["Başarı"] </div>
-}
-else if (TempData["Hata"] != null)
-{
-    <div class="alert alert-danger"> @TempData["Hata"] </div>
-}
-else if (TempData["Bilgi"] != null)
-{
-    <div class="alert alert-warning"> @TempData["Bilgi"] </div>
-}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 90vh;">
+    <div class="card shadow-lg p-5 bg-light" style="max-width: 600px; width: 100%;">
+        <h2 class="text-center fw-bold mb-4">
+            <span class="text-dark">Berber</span> Yetenek Ekle
+        </h2>
+        <p class="text-center text-muted mb-4">Berbere yeni bir yetenek ekleyin</p>
 
-<h3>Berbere Yetenek Ekle</h3>
-<hr />
+        @if (TempData["Başarı"] != null)
+        {
+            <div class="alert alert-success text-center"> @TempData["Başarı"] </div>
+        }
+        else if (TempData["Hata"] != null)
+        {
+            <div class="alert alert-danger text-center"> @TempData["Hata"] </div>
+        }
+        else if (TempData["Bilgi"] != null)
+        {
+            <div class="alert alert-warning text-center"> @TempData["Bilgi"] </div>
+        }
 
-<form asp-action="YetenekEkle" method="get">
-    <div class="form-group">
-        <label asp-for="BerberId" class="control-label">Berber Seçin:</label>
-        <select asp-for="BerberId" class="form-control" asp-items="@Model.BerberlerSelectList" onchange="this.form.submit()">
-            <option value="" disabled selected>Bir berber seçin.</option>
-        </select>
+        <form asp-action="YetenekEkle" method="get" class="mb-4">
+            <div class="form-group">
+                <label asp-for="BerberId" class="form-label fw-semibold">Berber Seçin:</label>
+                <select asp-for="BerberId" class="form-control" asp-items="@Model.BerberlerSelectList" onchange="this.form.submit()">
+                    <option value="" disabled selected>Bir berber seçin</option>
+                </select>
+            </div>
+        </form>
+
+        <form asp-action="YetenekEkle" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="BerberId" />
+
+            <div class="form-group mb-3">
+                <label asp-for="YetenekId" class="form-label fw-semibold">Yetenek Seçin:</label>
+                <select asp-for="YetenekId"
+                        class="form-control"
+                        asp-items="@Model.YeteneklerSelectList"
+                        disabled="@yeteneklerDevreDisi">
+                </select>
+                <span asp-validation-for="YetenekId" class="text-danger"></span>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary w-100 py-2" disabled="@yeteneklerDevreDisi">Kaydet</button>
+            </div>
+        </form>
     </div>
-</form>
+</div>
 
-<form asp-action="YetenekEkle" method="post">
-    @Html.AntiForgeryToken()
+<style>
+    body {
+        background: linear-gradient(135deg, #f0f2f5, #d6dbe0);
+        height: 100vh;
+        margin: 0;
+    }
 
-    <input type="hidden" asp-for="BerberId" />
+    .card {
+        border-radius: 20px;
+    }
 
-    <div class="form-group">
-        <label asp-for="YetenekId" class="control-label">Yetenek Seçin:</label>
-        <select asp-for="YetenekId"
-                class="form-control"
-                asp-items="@Model.YeteneklerSelectList"
-                disabled=@yeteneklerDevreDisi>
-        </select>
-        <span asp-validation-for="YetenekId" class="text-danger"></span>
-    </div>
+    .btn-primary {
+        background-color: #2c3e50;
+        border-color: #2c3e50;
+    }
 
-    <button type="submit" class="btn btn-primary mt-2" disabled=@yeteneklerDevreDisi>Kaydet</button>
-</form>
+        .btn-primary:hover {
+            background-color: #1c2b39;
+            border-color: #1c2b39;
+        }
+
+    .form-control:focus {
+        box-shadow: 0 0 10px rgba(44, 62, 80, 0.4);
+        border-color: #2c3e50;
+    }
+
+    h2 span.text-dark {
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .alert {
+        border-radius: 10px;
+    }
+</style>
