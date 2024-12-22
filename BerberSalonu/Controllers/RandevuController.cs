@@ -71,12 +71,23 @@ namespace BerberSalonu.Controllers
                     return Json(new { success = false, message = "Geçerli bir tarih girin." });
                 }
 
+                var suAn = DateTime.Now;
                 var baslangicSaati = new TimeOnly(10, 0);  // 10:00
                 var bitisSaati = new TimeOnly(22, 0);      // 22:00
+
+                if (secilenTarih < DateOnly.FromDateTime(suAn.Date))
+                {
+                    return Json(new { success = false, message = "Geçmiş tarihe randevu alınamaz." });
+                }
 
                 var saatAraliklari = new List<TimeOnly>();
                 for (var zaman = baslangicSaati; zaman < bitisSaati; zaman = zaman.AddMinutes(20))
                 {
+                    // Bugün için yalnızca şu andan sonraki saatleri göster
+                    if (secilenTarih == DateOnly.FromDateTime(suAn.Date) && zaman <= TimeOnly.FromDateTime(suAn))
+                    {
+                        continue;
+                    }
                     saatAraliklari.Add(zaman);
                 }
 

@@ -64,7 +64,7 @@ namespace BerberSalonu.Controllers
                 await file.CopyToAsync(stream);
             }
 
-            var resizedFilePath = ResizeImage(filePath, 224, 224); // Dinamik boyutlandýrma
+            var resizedFilePath = ResizeImage(filePath, 512, 512); // Dinamik boyutlandýrma
             var analizSonucu = await FotografAnalizEt(resizedFilePath);
 
             ViewBag.Analiz = analizSonucu;
@@ -115,7 +115,7 @@ namespace BerberSalonu.Controllers
                         role = "user",
                         content = new object[]
                         {
-                            new { type = "text", text = "Bana uygun bir saç modeli veya bir saç rengi önerebilir misin?" },
+                            new { type = "text", text = "Bana uygun bir saç modeli veya bir saç rengi önerir misin?" },
                             new { type = "image_url", image_url = new { url = $"data:image/jpeg;base64,{base64Image}" } }
                         }
                     }
