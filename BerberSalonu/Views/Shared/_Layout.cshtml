@@ -3,107 +3,185 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - BerberSalonu</title>
+    <title>@ViewData["Title"] - Berber Salonu</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BerberSalonu.styles.css" asp-append-version="true" />
+
+    <style>
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .content {
+            flex: 1;
+        }
+
+        .navbar {
+            background-color: #2c3e50;
+        }
+
+        .navbar-brand, .nav-link {
+            color: #ecf0f1 !important;
+        }
+
+            .nav-link:hover {
+                color: #f1c40f !important; /* Altın sarısı hover */
+            }
+
+        .kullanici-bilgi {
+            font-size: 1rem;
+            color: #bdc3c7;
+        }
+
+            .kullanici-bilgi .rol {
+                font-weight: bold;
+                text-transform: uppercase;
+            }
+
+        .admin-text {
+            color: #27ae60;
+        }
+
+        .berber-text {
+            color: #f39c12;
+        }
+
+        .musteri-text {
+            color: #3498db;
+        }
+
+        footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px 0;
+        }
+
+            footer a {
+                color: #f1c40f;
+                text-decoration: none;
+            }
+
+                footer a:hover {
+                    text-decoration: underline;
+                }
+    </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">BerberSalonu</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Hizmetlerimiz">Hizmetlerimiz</a>
-                        </li>
-                        @{
-                            if (!User.Identity.IsAuthenticated)
+    <div class="wrapper">
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+                <div class="container-fluid">
+                    <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
+                        <img src="~/img/logo.png" alt="Logo" width="40" class="me-2">Berber Salonu
+                    </a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse justify-content-between" id="navbarNav">
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Hizmetlerimiz">Hizmetlerimiz</a>
+                            </li>
+                            @if (!User.Identity.IsAuthenticated)
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="Hesap" asp-action="Kayit">Kayıt</a>
+                                    <a class="nav-link" asp-area="" asp-controller="Hesap" asp-action="Kayit">Kayıt</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="Hesap" asp-action="Giris">Giriş</a>
+                                    <a class="nav-link" asp-area="" asp-controller="Hesap" asp-action="Giris">Giriş</a>
                                 </li>
                             }
                             else
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="" asp-controller="Hesap" asp-action="Cikis" asp-route-returnUrl="@Context.Request.Path">Çıkış</a>
+                                    <a class="nav-link" asp-area="" asp-controller="Hesap" asp-action="Cikis" asp-route-returnUrl="@Context.Request.Path">Çıkış</a>
                                 </li>
                             }
-                        }
-                    </ul>
-                    <ul class="navbar-nav ms-auto">
-                        @{
-                            if (User.Identity.IsAuthenticated)
+                        </ul>
+                        <ul class="navbar-nav ms-auto">
+                            @if (User.Identity.IsAuthenticated)
                             {
-                                var rol = @User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-                                var ad = @User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+                                var rol = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+                                var ad = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
+                                var soyad = User.FindFirst(System.Security.Claims.ClaimTypes.Surname)?.Value;
+                                var rolClass = rol == "Admin" ? "admin-text" : rol == "Berber" ? "berber-text" : "musteri-text";
 
                                 <li class="nav-item mt-2">
-                                    <p class="text-success">@rol @ad</p>
+                                    <p class="kullanici-bilgi">
+                                        <span class="rol @rolClass">@rol</span> - <span>@ad @soyad</span>
+                                    </p>
                                 </li>
-                                if(rol == "Müşteri")
+
+                                if (rol == "Müşteri")
                                 {
                                     <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Randevu" asp-action="RandevuOlustur">Randevu Oluştur</a>
+                                        <a class="nav-link" asp-area="" asp-controller="Randevu" asp-action="RandevuOlustur">Randevu Oluştur</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Randevu" asp-action="Randevularim">Randevularim</a>
+                                        <a class="nav-link" asp-area="" asp-controller="Randevu" asp-action="Randevularim">Randevularım</a>
                                     </li>
                                 }
                                 if (rol == "Admin")
                                 {
                                     <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="BerberEkle">Berber Ekle</a>
+                                        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="BerberEkle">Berber Ekle</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="YetenekEkle">Berber Yetenek Ekle</a>
+                                        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="YetenekEkle">Berber Yetenek Ekle</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Admin" asp-action="KazanclariListele">Kazançları Listele</a>
+                                        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="KazanclariListele">Kazançları Listele</a>
                                     </li>
                                 }
-                                if (rol=="Berber")
+                                if (rol == "Berber")
                                 {
                                     <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Berber" asp-action="RandevuTalepleri">Randevu Talepleri</a>
+                                        <a class="nav-link" asp-area="" asp-controller="Berber" asp-action="RandevuTalepleri">Randevu Talepleri</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Berber" asp-action="Randevularim">Randevularim</a>
+                                        <a class="nav-link" asp-area="" asp-controller="Berber" asp-action="Randevularim">Randevularım</a>
                                     </li>
-                                    
                                 }
                             }
-                        }
-                    </ul>
+                        </ul>
+                    </div>
                 </div>
+            </nav>
+        </header>
+
+        <div class="container mt-4 content">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
+
+        <footer class="text-center mt-auto">
+            <div class="container">
+                <p class="mb-0">&copy; 2024 Berber Salonu - Tüm Hakları Saklıdır</p>
+                <p>
+                    <a href="#">Gizlilik Politikası</a> |
+                    <a href="#">İletişim</a> |
+                    <a href="#">Hakkımızda</a>
+                </p>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        </footer>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - BerberSalonu
-        </div>
-    </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    @await RenderSectionAsync("Scripts", required: false)
-    </body>
+
+    @RenderSection("Scripts", required: false)
+
+</body>
 </html>

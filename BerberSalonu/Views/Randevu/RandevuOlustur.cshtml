@@ -1,79 +1,137 @@
 ﻿@model BerberSalonu.ViewModel.RandevuViewModel
 
 @{
-    ViewData["Title"] = "Randevu Oluştur";
+    ViewBag.Title = "Randevu Oluştur";
 }
 
 <h2>Randevu Oluştur</h2>
 
-@if (TempData["Mesaj"] != null)
-{
-    <div class="alert alert-success">@TempData["Mesaj"]</div>
-}
+<div class="container">
+    @if (TempData["Hata"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Hata"]</div>
+    }
+    @if (TempData["Mesaj"] != null)
+    {
+        <div class="alert alert-success">@TempData["Mesaj"]</div>
+    }
 
-@if (TempData["Hata"] != null)
-{
-    <div class="alert alert-danger">@TempData["Hata"]</div>
-}
+    <form asp-controller="Randevu" asp-action="RandevuOlustur" method="post">
+        @Html.AntiForgeryToken()
 
-<form asp-action="RandevuOlustur" method="post">
-    <div class="form-group">
-        <label for="YetenekId">Yetenek</label>
-        <select id="YetenekId" class="form-control" asp-for="YetenekId">
-            <option value="">Lütfen bir yetenek seçin</option>
-            @foreach (var yetenek in Model.Yetenekler)
-            {
-                <option value="@yetenek.Id"> @yetenek.Name - @yetenek.Price.ToString("C2")</option>
-            }
-        </select>
-        <span asp-validation-for="YetenekId" class="text-danger"></span>
-    </div>
+        <!-- Yetenek Seçimi -->
+        <div class="form-group">
+            <label for="yetenekDropdown">Yetenek Seçin:</label>
+            <select id="yetenekDropdown" name="YetenekId" class="form-control" required>
+                <option value="">Lütfen bir yetenek seçin</option>
+                @foreach (var yetenek in Model.Yetenekler)
+                {
+                    <option value="@yetenek.Id">@yetenek.Name</option>
+                }
+            </select>
+        </div>
 
-    <div class="form-group">
-        <label for="BerberId">Berber</label>
-        <select id="BerberId" class="form-control" asp-for="BerberId">
-            <option value="">Lütfen önce bir yetenek seçin</option>
-        </select>
-        <span asp-validation-for="BerberId" class="text-danger"></span>
-    </div>
+        <!-- Berber Seçimi -->
+        <div class="form-group">
+            <label for="berberDropdown">Berber Seçin:</label>
+            <select id="berberDropdown" name="BerberId" class="form-control" required>
+                <option value="">Lütfen bir berber seçin</option>
+            </select>
+        </div>
 
-    <div class="form-group">
-        <label for="RandevuTarihi">Randevu Tarihi ve Saati</label>
-        <input type="datetime-local"
-               id="RandevuTarihi"
-               class="form-control"
-               asp-for="RandevuTarihi"
-               min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")"
-               max="@DateTime.Now.AddYears(1).Date.AddHours(22).ToString("yyyy-MM-ddTHH:mm")" />
-        <span asp-validation-for="RandevuTarihi" class="text-danger"></span>
-    </div>
+        <!-- Tarih Seçimi -->
+        <div class="form-group">
+            <label for="tarihInput">Tarih Seçin:</label>
+            <input type="date" id="tarihInput" name="RandevuTarihi" class="form-control" required />
+        </div>
 
-    <button type="submit" class="btn btn-primary">Randevuyu Oluştur</button>
-</form>
+        <!-- Saat Seçimi -->
+        <div class="form-group">
+            <label for="saatDropdown">Saat Seçin:</label>
+            <select id="saatDropdown" name="RandevuSaati" class="form-control" required>
+                <option value="">Lütfen bir saat seçin</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Randevu Oluştur</button>
+    </form>
+</div>
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
-            $('#YetenekId').change(function () {
-                var yetenekId = $(this).val();
+        // Yetenek seçildiğinde berberleri getir
+        $("#yetenekDropdown").change(function () {
+            const yetenekId = $(this).val();
+            const berberDropdown = $("#berberDropdown");
 
-                if (yetenekId) {
-                    $.getJSON('/Randevu/BerberleriGetir', { yetenekId: yetenekId }, function (berberler) {
-                        var berberDropdown = $('#BerberId');
-                        berberDropdown.empty();
+            // Berberleri temizle
+            berberDropdown.empty();
+            berberDropdown.append('<option value="">Lütfen bir berber seçin</option>');
 
-                        if (berberler.length > 0) {
-                            berberler.forEach(function (berber) {
-                                berberDropdown.append('<option value=\"' + berber.id + '\">' + berber.ad + '</option>');
-                            });
-                        } else {
-                            berberDropdown.append('<option value=\"\">Bu yetenek için uygun berber bulunamadı</option>');
-                        }
-                    });
-                } else {
-                    $('#BerberId').empty().append('<option value=\"\">Lütfen önce bir yetenek seçin</option>');
-                }
-            });
+            if (yetenekId) {
+                $.get("/Randevu/BerberleriGetir", { yetenekId: yetenekId }, function (data) {
+                    if (data.success === false) {
+                        alert(data.message);
+                    } else {
+                        data.forEach(berber => {
+                            berberDropdown.append(`<option value="${berber.id}">${berber.adSoyad}</option>`);
+                        });
+                    }
+                }).fail(function () {
+                    alert("Berberler yüklenirken bir hata oluştu.");
+                });
+            }
+        });
+
+        // Tarih seçildiğinde saatleri getir
+        $("#tarihInput").change(function () {
+            const berberId = $("#berberDropdown").val();
+            const tarih = $(this).val();
+            const yetenekId = $("#yetenekDropdown").val();
+            const saatDropdown = $("#saatDropdown");
+
+            // Saatleri temizle
+            saatDropdown.empty();
+            saatDropdown.append('<option value="">Lütfen bir saat seçin</option>');
+
+            if (berberId && tarih && yetenekId) {
+                $.get("/Randevu/SaatAraliklariGetir", { berberId: berberId, tarih: tarih, yetenekId: yetenekId }, function (data) {
+                    if (data.length > 0) {
+                        data.forEach(saat => {
+                            saatDropdown.append(`<option value="${saat}">${saat}</option>`);
+                        });
+                    } else {
+                        saatDropdown.append('<option value="">Uygun saat bulunamadı</option>');
+                    }
+                }).fail(function () {
+                    alert("Saat aralıkları yüklenirken bir hata oluştu.");
+                });
+            }
+        });
+
+        // Berber seçildiğinde saatleri otomatik getir
+        $("#berberDropdown").change(function () {
+            const berberId = $(this).val();
+            const tarih = $("#tarihInput").val();
+            const yetenekId = $("#yetenekDropdown").val();
+            const saatDropdown = $("#saatDropdown");
+
+            saatDropdown.empty();
+            saatDropdown.append('<option value="">Lütfen bir saat seçin</option>');
+
+            if (berberId && tarih && yetenekId) {
+                $.get("/Randevu/SaatAraliklariGetir", { berberId: berberId, tarih: tarih, yetenekId: yetenekId }, function (data) {
+                    if (data.length > 0) {
+                        data.forEach(saat => {
+                            saatDropdown.append(`<option value="${saat}">${saat}</option>`);
+                        });
+                    } else {
+                        saatDropdown.append('<option value="">Uygun saat bulunamadı</option>');
+                    }
+                }).fail(function () {
+                    alert("Saat aralıkları yüklenirken bir hata oluştu.");
+                });
+            }
         });
     </script>
 }

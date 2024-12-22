@@ -134,8 +134,11 @@ namespace BerberSalonu.Migrations
                     b.Property<int>("MusteriId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("RandevuTarihi")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<TimeOnly>("RandevuSaati")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<DateOnly>("RandevuTarihi")
+                        .HasColumnType("date");
 
                     b.Property<int>("YetenekId")
                         .HasColumnType("integer");
@@ -191,21 +194,6 @@ namespace BerberSalonu.Migrations
                     b.ToTable("Yetenekler");
                 });
 
-            modelBuilder.Entity("BerberYetenek", b =>
-                {
-                    b.Property<int>("BerberlerId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("YeteneklerId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("BerberlerId", "YeteneklerId");
-
-                    b.HasIndex("YeteneklerId");
-
-                    b.ToTable("BerberYetenek");
-                });
-
             modelBuilder.Entity("BerberSalonu.Models.Berber", b =>
                 {
                     b.HasOne("BerberSalonu.Models.Kullanici", "Kullanici")
@@ -220,13 +208,13 @@ namespace BerberSalonu.Migrations
             modelBuilder.Entity("BerberSalonu.Models.BerberYetenek", b =>
                 {
                     b.HasOne("BerberSalonu.Models.Berber", "Berber")
-                        .WithMany()
+                        .WithMany("BerberYetenekler")
                         .HasForeignKey("BerberId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("BerberSalonu.Models.Yetenek", "Yetenek")
-                        .WithMany()
+                        .WithMany("BerberYetenekler")
                         .HasForeignKey("YetenekId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -285,23 +273,10 @@ namespace BerberSalonu.Migrations
                     b.Navigation("Yetenek");
                 });
 
-            modelBuilder.Entity("BerberYetenek", b =>
-                {
-                    b.HasOne("BerberSalonu.Models.Berber", null)
-                        .WithMany()
-                        .HasForeignKey("BerberlerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BerberSalonu.Models.Yetenek", null)
-                        .WithMany()
-                        .HasForeignKey("YeteneklerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("BerberSalonu.Models.Berber", b =>
                 {
+                    b.Navigation("BerberYetenekler");
+
                     b.Navigation("Randevular");
                 });
 
@@ -312,6 +287,8 @@ namespace BerberSalonu.Migrations
 
             modelBuilder.Entity("BerberSalonu.Models.Yetenek", b =>
                 {
+                    b.Navigation("BerberYetenekler");
+
                     b.Navigation("Randevular");
                 });
 #pragma warning restore 612, 618

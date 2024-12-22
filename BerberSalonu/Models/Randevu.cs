@@ -16,11 +16,14 @@ namespace BerberSalonu.Models
         public Berber Berber { get; set; }
 
         [Required]
-        public int YetenekId { get; set; } // String yerine int olarak düzeltildi
+        public int YetenekId { get; set; }
         public Yetenek Yetenek { get; set; }
 
-        [Required]
-        public DateTime RandevuTarihi { get; set; }
-        public bool IsOnaylandi { get; set; } = false; // Onay durumu (varsayılan: false)
+        [Required(ErrorMessage = "Lütfen bir randevu tarihi seçin.")]
+        public DateOnly RandevuTarihi { get; set; }
+
+        [Required(ErrorMessage = "Lütfen bir randevu saati seçin.")]
+        public TimeOnly RandevuSaati { get; set; }
+        public bool IsOnaylandi { get; set; } = false;
     }
 }

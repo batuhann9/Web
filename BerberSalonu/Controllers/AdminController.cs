@@ -3,6 +3,7 @@ using BerberSalonu.Veritabanı;
 using BerberSalonu.ViewModel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace BerberSalonu.Controllers
@@ -17,12 +18,20 @@ namespace BerberSalonu.Controllers
         {
             _context = context;
         }
+
         public IActionResult Index()
         {
             return View();
         }
 
-        [Route("Berber/Ekle")]
+        // Yeni berber ekleme
+        [HttpGet("Berber/Ekle")]
+        public IActionResult BerberEkle()
+        {
+            return View();
+        }
+
+        [HttpPost("Berber/Ekle")]
         public async Task<IActionResult> BerberEkle(KayitViewModel veri)
         {
             if (!ModelState.IsValid)
@@ -30,16 +39,23 @@ namespace BerberSalonu.Controllers
                 return View(veri);
             }
 
-            var kullanici = await _context.Kullanicilar.FirstOrDefaultAsync(k => k.Eposta == veri.Email);
+            var kullaniciVarMi = await _context.Kullanicilar
+                .AnyAsync(k => k.Eposta == veri.Email);
 
-            if (kullanici != null)
+            if (kullaniciVarMi)
             {
-                ModelState.AddModelError("Email", "Eposta mevcut");
+                ModelState.AddModelError("Email", "Bu e-posta adresi zaten mevcut.");
                 return View(veri);
             }
 
             var hash = BCrypt.Net.BCrypt.HashPassword(veri.Password);
-            var rol = await _context.Roller.FirstOrDefaultAsync(r => r.Name == "Berber")!;
+            var rol = await _context.Roller.FirstOrDefaultAsync(r => r.Name == "Berber");
+
+            if (rol == null)
+            {
+                ModelState.AddModelError("", "Berber rolü bulunamadı.");
+                return View(veri);
+            }
 
             var yeniKullanici = new Kullanici
             {
@@ -47,7 +63,7 @@ namespace BerberSalonu.Controllers
                 Soyad = veri.LastName,
                 Eposta = veri.Email,
                 SifreHashi = hash,
-                Rol = rol!
+                Rol = rol
             };
 
             var yeniBerber = new Berber
@@ -58,96 +74,123 @@ namespace BerberSalonu.Controllers
             _context.Add(yeniBerber);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction("Index", "Admin");
+            TempData["Mesaj"] = "Berber başarıyla eklendi.";
+            return RedirectToAction("Index");
         }
 
+        // Yetenek Ekleme İşlemi
         [HttpGet("Berber/YetenekEkle")]
-        public async Task<IActionResult> YetenekEkle()
+        public async Task<IActionResult> YetenekEkle([FromQuery] int? berberId)
         {
-            var berberler = await _context.Berberler
-                .Include(b => b.Kullanici)
-                .ToListAsync();
-
-            var yetenekler = await _context.Yetenekler
-                .ToListAsync();
-
-            var model = new BerberYetenekEkleViewModel
-            {
-                Berberler = berberler,
-                Yetenekler = yetenekler
-            };
-
+            var model = await YetenekViewModelHazirla(berberId);
             return View(model);
         }
 
         [HttpPost("Berber/YetenekEkle")]
-        public IActionResult YetenekEkle(BerberYetenekEkleViewModel model)
+        public async Task<IActionResult> YetenekEkle(BerberYetenekEkleViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var berber = _context.Berberler
-                    .FirstOrDefault(b => b.Id == model.BerberId);
-                var yetenek = _context.Yetenekler
-                    .FirstOrDefault(y => y.Id == model.YetenekId);
-
-                // Berber ve Yetenek varsa, ilişkili tabloya ekleyin
-                if (berber != null && yetenek != null)
-                {
-                    var mevcutIliski = _context.BerberYetenekler
-                        .FirstOrDefault(b => b.BerberId == model.BerberId && b.YetenekId == model.YetenekId);
-
-                    if (mevcutIliski == null)
-                    {
-                        var yeniIliski = new BerberYetenek
-                        {
-                            BerberId = model.BerberId,
-                            YetenekId = model.YetenekId
-                        };
-
-                        _context.BerberYetenekler.Add(yeniIliski);
-                        _context.SaveChanges();
-                    }
-                    else
-                    {
-                        ModelState.AddModelError("", "Bu yetenek zaten eklenmiş!");
-                        return View(model);
-                    }
-
-                    return RedirectToAction("Index"); // Başarılı yönlendirme
-                }
-                else
-                {
-                    ModelState.AddModelError("", "Geçersiz veriler!");
-                }
+                model = await YetenekViewModelHazirla(model.BerberId);
+                return View(model);
             }
 
-            return View(model);
+            if (await _context.BerberYetenekler
+                .AnyAsync(b => b.BerberId == model.BerberId && b.YetenekId == model.YetenekId))
+            {
+                TempData["Hata"] = "Bu yetenek zaten eklenmiş!";
+                model = await YetenekViewModelHazirla(model.BerberId);
+                return View(model);
+            }
+
+            var yeniIliski = new BerberYetenek
+            {
+                BerberId = model.BerberId,
+                YetenekId = model.YetenekId
+            };
+
+            _context.BerberYetenekler.Add(yeniIliski);
+            await _context.SaveChangesAsync();
+
+            TempData["Başarı"] = "Berbere yetenek ekleme başarılı!";
+            return RedirectToAction(nameof(YetenekEkle), new { berberId = model.BerberId });
         }
+
+        // Yetenek Silme İşlemi
+        //[HttpGet("Berber/YetenekSil")]
+        //public async Task<IActionResult> YetenekSil([FromQuery] int? berberId)
+        //{
+        //    var model = await YetenekViewModelHazirla(berberId, true);
+        //    return View(model);
+        //}
+
+        //[HttpPost("Berber/YetenekSil")]
+        //public async Task<IActionResult> YetenekSil(BerberYetenekEkleViewModel model)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        model = await YetenekViewModelHazirla(model.BerberId, true);
+        //        return View(model);
+        //    }
+
+        //    var mevcutIliski = await _context.BerberYetenekler
+        //        .FirstOrDefaultAsync(b => b.BerberId == model.BerberId && b.YetenekId == model.YetenekId);
+
+        //    if (mevcutIliski == null)
+        //    {
+        //        TempData["Hata"] = "Bu yetenek zaten ekli değil!";
+        //        model = await YetenekViewModelHazirla(model.BerberId, true);
+        //        return View(model);
+        //    }
+
+        //    _context.BerberYetenekler.Remove(mevcutIliski);
+        //    await _context.SaveChangesAsync();
+
+        //    TempData["Başarı"] = "Berberden yetenek silme başarılı!";
+        //    return RedirectToAction(nameof(YetenekSil), new { berberId = model.BerberId });
+        //}
+
+        // Kazançları Listele
         [HttpGet("kazanclarilistele")]
         public async Task<IActionResult> KazanclariListele()
         {
-            // Berberlerin kazançlarını hesapla (Sadece onaylı randevular)
             var kazancListesi = await _context.Randevular
-                .Include(r => r.Berber)   // Berber bilgilerini dahil et
-                .Include(r => r.Yetenek)  // Yetenek bilgilerini dahil et
-                .Where(r => r.IsOnaylandi == true)  // Sadece onaylanmış randevuları al
-                .GroupBy(r => r.BerberId)  // BerberId'ye göre grupla
+                .Include(r => r.Berber)
+                .Include(r => r.Yetenek)
+                .Where(r => r.IsOnaylandi == true)
+                .GroupBy(r => r.BerberId)
                 .Select(g => new BerberKazanciViewModel
                 {
-                    BerberAd = g.FirstOrDefault().Berber.Kullanici.Ad + " " + g.FirstOrDefault().Berber.Kullanici.Soyad,
-                    ToplamKazanc = g.Sum(r => r.Yetenek.Price)  // Yeteneklerin fiyatlarını topla
+                    BerberAd = g.First().Berber.Kullanici.Ad + " " + g.First().Berber.Kullanici.Soyad,
+                    ToplamKazanc = g.Sum(r => r.Yetenek.Price)
                 }).ToListAsync();
 
-            // Admin paneli için model oluştur
-            var model = new AdminViewModel
-            {
-                BerberKazancListesi = kazancListesi
-            };
-
-            // View'e model gönder
-            return View(model);
+            return View(new AdminViewModel { BerberKazancListesi = kazancListesi });
         }
 
+        // Yetenek ViewModel Hazırlama
+        private async Task<BerberYetenekEkleViewModel> YetenekViewModelHazirla(int? berberId, bool silinebilir = false)
+        {
+            var model = new BerberYetenekEkleViewModel();
+            model.BerberlerSelectList = new SelectList(await _context.Berberler
+                .Include(b => b.Kullanici)
+                .Select(b => new
+                {
+                    b.Id,
+                    FullName = b.Kullanici.Ad + " " + b.Kullanici.Soyad
+                }).ToListAsync(), "Id", "FullName");
+
+            if (berberId.HasValue)
+            {
+                var mevcutYetenekler = _context.BerberYetenekler
+                    .Where(by => by.BerberId == berberId.Value)
+                    .Select(by => by.YetenekId);
+
+                model.YeteneklerSelectList = new SelectList(await _context.Yetenekler
+                    .Where(y => silinebilir ? mevcutYetenekler.Contains(y.Id) : !mevcutYetenekler.Contains(y.Id))
+                    .ToListAsync(), "Id", "Name");
+            }
+            return model;
+        }
     }
 }
-

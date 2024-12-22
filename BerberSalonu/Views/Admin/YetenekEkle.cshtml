@@ -1,22 +1,49 @@
-﻿@using BerberSalonu.ViewModel
+﻿﻿@using BerberSalonu.ViewModel
 @model BerberYetenekEkleViewModel
+
+@{
+    bool yeteneklerDevreDisi = Model.YeteneklerSelectList == null || !Model.YeteneklerSelectList.Any();
+}
+
+@if (TempData["Başarı"] != null)
+{
+    <div class="alert alert-success"> @TempData["Başarı"] </div>
+}
+else if (TempData["Hata"] != null)
+{
+    <div class="alert alert-danger"> @TempData["Hata"] </div>
+}
+else if (TempData["Bilgi"] != null)
+{
+    <div class="alert alert-warning"> @TempData["Bilgi"] </div>
+}
+
+<h3>Berbere Yetenek Ekle</h3>
+<hr />
+
+<form asp-action="YetenekEkle" method="get">
+    <div class="form-group">
+        <label asp-for="BerberId" class="control-label">Berber Seçin:</label>
+        <select asp-for="BerberId" class="form-control" asp-items="@Model.BerberlerSelectList" onchange="this.form.submit()">
+            <option value="" disabled selected>Bir berber seçin.</option>
+        </select>
+    </div>
+</form>
 
 <form asp-action="YetenekEkle" method="post">
     @Html.AntiForgeryToken()
 
-    <div class="form-group">
-        <label asp-for="BerberId" class="control-label"></label>
-        <select asp-for="BerberId" class="form-control" asp-items="@(new SelectList(Model.Berberler, "Id", "Kullanici.Ad"))">
-        </select>
-        <span asp-validation-for="BerberId" class="text-danger"></span>
-    </div>
+    <input type="hidden" asp-for="BerberId" />
 
     <div class="form-group">
-        <label asp-for="YetenekId" class="control-label"></label>
-        <select asp-for="YetenekId" class="form-control" asp-items="@(new SelectList(Model.Yetenekler, "Id", "Name"))">
+        <label asp-for="YetenekId" class="control-label">Yetenek Seçin:</label>
+        <select asp-for="YetenekId"
+                class="form-control"
+                asp-items="@Model.YeteneklerSelectList"
+                disabled=@yeteneklerDevreDisi>
         </select>
         <span asp-validation-for="YetenekId" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Kaydet</button>
+    <button type="submit" class="btn btn-primary mt-2" disabled=@yeteneklerDevreDisi>Kaydet</button>
 </form>

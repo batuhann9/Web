@@ -14,12 +14,14 @@ namespace BerberSalonu.ViewModel
 
         [Required(ErrorMessage = "Lütfen bir berber seçin.")]
         public int BerberId { get; set; }
+        [Required(ErrorMessage = "Lütfen bir randevu tarihi seçin.")]
+        [DataType(DataType.Date)]
+        public DateOnly RandevuTarihi { get; set; }
 
-        [Required(ErrorMessage = "Lütfen bir randevu tarihi ve saati seçin.")]
-        [DataType(DataType.DateTime)]
-        public DateTime RandevuTarihi { get; set; }
+        [Required(ErrorMessage = "Lütfen bir randevu saati seçin.")]
+        [DataType(DataType.Time)]
+        public TimeOnly RandevuSaati { get; set; }
 
-        // Dropdown'lar için listeler
         public List<Berber> Berberler { get; set; } = new List<Berber>();
         public List<Yetenek> Yetenekler { get; set; } = new List<Yetenek>();
     }

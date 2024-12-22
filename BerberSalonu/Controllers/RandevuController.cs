@@ -3,12 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using BerberSalonu.Models;
 using BerberSalonu.ViewModel;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
+using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using BerberSalonu.Veritabanı;
 
 namespace BerberSalonu.Controllers
 {
     [Authorize(Roles = "Müşteri")]
+    [Route("Randevu")]
     public class RandevuController : Controller
     {
         private readonly BerberContext _context;
@@ -18,34 +22,99 @@ namespace BerberSalonu.Controllers
             _context = context;
         }
 
-        // GET: RandevuOlustur
+        [HttpGet("RandevuOlustur")]
         public IActionResult RandevuOlustur()
         {
             var viewModel = new RandevuViewModel
             {
                 Yetenekler = _context.Yetenekler.ToList()
             };
-
             return View(viewModel);
         }
 
-        // GET: BerberleriGetir
-        public IActionResult BerberleriGetir(int yetenekId)
+        [HttpGet("BerberleriGetir")]
+        public async Task<IActionResult> BerberleriGetir(int yetenekId)
         {
-            var berberler = _context.Berberler
-                .Include(b => b.Kullanici)
-                .Where(b => b.Yetenekler.Any(y => y.Id == yetenekId))
-                .Select(b => new
-                {
-                    b.Id,
-                    Ad = b.Kullanici.Ad + " " + b.Kullanici.Soyad
-                })
-                .ToList();
+            try
+            {
+                var berberler = await _context.BerberYetenekler
+                    .Include(by => by.Berber)
+                    .ThenInclude(b => b.Kullanici)
+                    .Where(by => by.YetenekId == yetenekId)
+                    .Select(by => new
+                    {
+                        by.Berber.Id,
+                        AdSoyad = by.Berber.Kullanici.Ad + " " + by.Berber.Kullanici.Soyad
+                    })
+                    .ToListAsync();
 
-            return Json(berberler);
+                if (!berberler.Any())
+                {
+                    return Json(new { success = false, message = "Bu yetenek için uygun berber bulunamadı." });
+                }
+
+                return Json(berberler);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Hata: {ex.Message}" });
+            }
         }
 
-        [HttpPost]
+        [HttpGet("SaatAraliklariGetir")]
+        public async Task<IActionResult> SaatAraliklariGetir(int berberId, string tarih, int yetenekId)
+        {
+            try
+            {
+                if (!DateOnly.TryParse(tarih, out DateOnly secilenTarih))
+                {
+                    return Json(new { success = false, message = "Geçerli bir tarih girin." });
+                }
+
+                var baslangicSaati = new TimeOnly(10, 0);  // 10:00
+                var bitisSaati = new TimeOnly(22, 0);      // 22:00
+
+                var saatAraliklari = new List<TimeOnly>();
+                for (var zaman = baslangicSaati; zaman < bitisSaati; zaman = zaman.AddMinutes(20))
+                {
+                    saatAraliklari.Add(zaman);
+                }
+
+                var yetenek = await _context.Yetenekler.FindAsync(yetenekId);
+                if (yetenek == null)
+                {
+                    return Json(new { success = false, message = "Yetenek bulunamadı." });
+                }
+
+                var mevcutRandevular = await _context.Randevular
+                    .Include(r => r.Yetenek)
+                    .Where(r => r.BerberId == berberId && r.RandevuTarihi == secilenTarih)
+                    .ToListAsync();
+
+                var uygunSaatler = saatAraliklari
+                    .Where(zaman =>
+                        !mevcutRandevular.Any(r =>
+                        {
+                            var randevuBaslangic = r.RandevuTarihi.ToDateTime(r.RandevuSaati);
+                            var randevuBitis = randevuBaslangic.AddMinutes(r.Yetenek?.Sure ?? 0);
+
+                            var secilenBaslangic = secilenTarih.ToDateTime(zaman);
+                            var secilenBitis = secilenBaslangic.AddMinutes(yetenek.Sure);
+
+                            return !(secilenBitis <= randevuBaslangic || secilenBaslangic >= randevuBitis);
+                        }))
+                    .Select(zaman => zaman.ToString("HH:mm"))
+                    .ToList();
+
+                return Json(uygunSaatler);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Saat aralıkları yüklenirken hata oluştu: {ex.Message}" });
+            }
+        }
+
+        [HttpPost("RandevuOlustur")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RandevuOlustur(RandevuViewModel model)
         {
@@ -54,13 +123,6 @@ namespace BerberSalonu.Controllers
                 try
                 {
                     var kullaniciEposta = User.Identity.Name;
-
-                    if (string.IsNullOrEmpty(kullaniciEposta))
-                    {
-                        TempData["Hata"] = "Kimlik doğrulama hatası. Lütfen tekrar giriş yapın.";
-                        return RedirectToAction("Giris", "Hesap");
-                    }
-
                     var musteri = await _context.Musteriler
                         .Include(m => m.Kullanici)
                         .FirstOrDefaultAsync(m => m.Kullanici.Eposta == kullaniciEposta);
@@ -71,18 +133,6 @@ namespace BerberSalonu.Controllers
                         return RedirectToAction("Giris", "Hesap");
                     }
 
-                    if (model.RandevuTarihi.Date < DateTime.Now.Date)
-                    {
-                        TempData["Hata"] = "Geçmiş bir tarihe randevu oluşturamazsınız.";
-                        model.Yetenekler = _context.Yetenekler.ToList();
-                        model.Berberler = _context.Berberler.ToList();
-                        return View(model);
-                    }
-
-                    // Tarihi UTC olarak belirle
-                    var randevuBaslangic = DateTime.SpecifyKind(model.RandevuTarihi, DateTimeKind.Utc);
-
-                    // Yetenek süresi ile randevu bitişini belirle
                     var yetenek = await _context.Yetenekler.FindAsync(model.YetenekId);
                     if (yetenek == null)
                     {
@@ -90,21 +140,22 @@ namespace BerberSalonu.Controllers
                         return RedirectToAction("RandevuOlustur");
                     }
 
+                    var randevuBaslangic = model.RandevuTarihi.ToDateTime(model.RandevuSaati);
                     var randevuBitis = randevuBaslangic.AddMinutes(yetenek.Sure);
 
-                    // Çakışan onaylanmış randevuları kontrol et
                     var cakisanRandevu = await _context.Randevular
-                        .Where(r => r.BerberId == model.BerberId
-                                    && r.IsOnaylandi
-                                    && r.RandevuTarihi < randevuBitis
-                                    && r.RandevuTarihi.AddMinutes(r.Yetenek.Sure) > randevuBaslangic)
-                        .FirstOrDefaultAsync();
+                        .Where(r => r.BerberId == model.BerberId && r.RandevuTarihi == model.RandevuTarihi)
+                        .Include(r => r.Yetenek)
+                        .ToListAsync();
 
-                    if (cakisanRandevu != null)
+                    if (cakisanRandevu.Any(r =>
                     {
-                        TempData["Hata"] = "Seçilen tarih ve saatte bu berber için başka bir onaylanmış randevu bulunuyor.";
-                        model.Yetenekler = _context.Yetenekler.ToList();
-                        model.Berberler = _context.Berberler.ToList();
+                        var mevcutBaslangic = r.RandevuTarihi.ToDateTime(r.RandevuSaati);
+                        var mevcutBitis = mevcutBaslangic.AddMinutes(r.Yetenek.Sure);
+                        return mevcutBaslangic < randevuBitis && mevcutBitis > randevuBaslangic;
+                    }))
+                    {
+                        TempData["Hata"] = "Seçilen saat aralığında çakışma var.";
                         return View(model);
                     }
 
@@ -113,7 +164,8 @@ namespace BerberSalonu.Controllers
                         MusteriId = musteri.Id,
                         YetenekId = model.YetenekId,
                         BerberId = model.BerberId,
-                        RandevuTarihi = randevuBaslangic
+                        RandevuTarihi = model.RandevuTarihi,
+                        RandevuSaati = model.RandevuSaati
                     };
 
                     _context.Randevular.Add(yeniRandevu);
@@ -124,20 +176,15 @@ namespace BerberSalonu.Controllers
                 }
                 catch (Exception ex)
                 {
-                    TempData["Hata"] = $"Bir hata oluştu: {ex.InnerException?.Message ?? ex.Message}";
+                    TempData["Hata"] = $"Bir hata oluştu: {ex.Message}";
                 }
             }
 
-            model.Yetenekler = _context.Yetenekler.ToList();
-            model.Berberler = _context.Berberler.ToList();
-
             return View(model);
         }
-
-        // GET: Randevularım
+        [HttpGet("Randevularim")]
         public async Task<IActionResult> Randevularim()
         {
-            // Oturumdaki kullanıcının kimliğini al
             var kullaniciEposta = User.Identity.Name;
 
             var musteri = await _context.Musteriler
@@ -146,37 +193,39 @@ namespace BerberSalonu.Controllers
 
             if (musteri == null)
             {
-                TempData["Hata"] = "Müşteri bulunamadı. Lütfen tekrar giriş yapın.";
+                TempData["Hata"] = "Müşteri bilgisi bulunamadı.";
                 return RedirectToAction("Giris", "Hesap");
             }
 
-            // Onaylanmış randevuları getir
             var randevular = await _context.Randevular
                 .Include(r => r.Berber)
                 .ThenInclude(b => b.Kullanici)
                 .Include(r => r.Yetenek)
-                .Where(r => r.MusteriId == musteri.Id && r.IsOnaylandi == true)
+                .Where(r => r.MusteriId == musteri.Id)
+                .OrderBy(r => r.RandevuTarihi)
+                .ThenBy(r => r.RandevuSaati)
                 .ToListAsync();
 
             return View(randevular);
         }
 
-        // POST: Randevu Iptal Et
-        [HttpPost]
+        [HttpPost("RandevuIptal")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RandevuIptal(int id)
         {
             var randevu = await _context.Randevular.FindAsync(id);
 
-            if (randevu == null)
+            if (randevu != null)
+            {
+                _context.Randevular.Remove(randevu);
+                await _context.SaveChangesAsync();
+                TempData["Mesaj"] = "Randevu başarıyla iptal edildi.";
+            }
+            else
             {
                 TempData["Hata"] = "Randevu bulunamadı.";
-                return RedirectToAction("Randevularim");
             }
 
-            _context.Randevular.Remove(randevu);
-            await _context.SaveChangesAsync();
-
-            TempData["Mesaj"] = "Randevu başarıyla iptal edildi.";
             return RedirectToAction("Randevularim");
         }
     }

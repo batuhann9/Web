@@ -1,39 +1,58 @@
 ﻿@model List<BerberSalonu.Models.Randevu>
 
-<h1>Gelen Randevu Talepleri</h1>
+@{
+    ViewBag.Title = "Randevu Talepleri";
+}
 
-@if (Model.Any())
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Müşteri Adı</th>
-                <th>Yetenek</th>
-                <th>Randevu Tarihi</th>
-                <th>İşlemler</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var randevu in Model)
-            {
+<h2>Randevu Talepleri</h2>
+
+<div class="container mt-4">
+    @if (TempData["Hata"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Hata"]</div>
+    }
+    @if (TempData["Mesaj"] != null)
+    {
+        <div class="alert alert-success">@TempData["Mesaj"]</div>
+    }
+
+    @if (Model.Any())
+    {
+        <table class="table table-bordered table-striped">
+            <thead>
                 <tr>
-                    <td>@($"{randevu.Musteri.Kullanici.Ad} {randevu.Musteri.Kullanici.Soyad}")</td>
-                    <td>@randevu.Yetenek.Name</td>
-                    <td>@randevu.RandevuTarihi.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>
-                        <form method="post" asp-action="RandevuOnayla" asp-route-id="@randevu.Id" style="display:inline;">
-                            <button type="submit" class="btn btn-success">Onayla</button>
-                        </form>
-                        <form method="post" asp-action="RandevuReddet" asp-route-id="@randevu.Id" style="display:inline;">
-                            <button type="submit" class="btn btn-danger">Reddet</button>
-                        </form>
-                    </td>
+                    <th>Müşteri</th>
+                    <th>Yetenek</th>
+                    <th>Tarih</th>
+                    <th>Saat</th>
+                    <th>İşlem</th>
                 </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>Onay bekleyen randevu talebi bulunmamaktadır.</p>
-}
+            </thead>
+            <tbody>
+                @foreach (var randevu in Model)
+                {
+                    <tr>
+                        <td>@($"{randevu.Musteri.Kullanici.Ad} {randevu.Musteri.Kullanici.Soyad}")</td>
+                        <td>@randevu.Yetenek.Name</td>
+                        <td>@randevu.RandevuTarihi.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
+                        <td>@randevu.RandevuSaati.ToString("HH:mm")</td>
+                        <td>
+                            <form asp-action="RandevuOnayla" method="post" asp-route-id="@randevu.Id" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success btn-sm">Onayla</button>
+                            </form>
+                            <form asp-action="RandevuReddet" method="post" asp-route-id="@randevu.Id" style="display:inline;">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger btn-sm">Reddet</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <div class="alert alert-info">Bekleyen randevu talebi bulunmamaktadır.</div>
+    }
+</div>

@@ -11,7 +11,7 @@ namespace BerberSalonu.Models
         public double Sure { get; set; }
 
         [JsonIgnore]
-        public ICollection<Berber> Berberler { get; set; } = new List<Berber>();
+        public ICollection<BerberYetenek> BerberYetenekler { get; set; } = new List<BerberYetenek>();
         public ICollection<Randevu> Randevular { get; set; } = new List<Randevu>();
     }
 }

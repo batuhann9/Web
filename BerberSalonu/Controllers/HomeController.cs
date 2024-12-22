@@ -1,7 +1,5 @@
 using BerberSalonu.Models;
 using BerberSalonu.Veritabaný;
-using BerberSalonu.vm;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -17,40 +15,18 @@ namespace BerberSalonu.Controllers
         {
             _logger = logger;
             _context = context;
-
         }
-
-        //public async Task<IActionResult> Index()
-        //{
-
-
-        //    var berber = await _context.Berberler
-        //        .Include(b => b.Yetenekler)
-        //        .FirstOrDefaultAsync(b => b.Id == 1);
-
-        //    if (berber == null)
-        //    {
-        //        return BadRequest("Berber yok kanka");
-        //    }
-
-        //    var berberViewModel = new BerberViewModel
-        //    {
-        //        Name = berber.Name,
-        //        Age = berber.Age,
-        //        Zaman = DateTime.Now.ToString(),
-        //        Yetenekler = berber.Yetenekler,
-        //    };
-
-
-        //    return Ok(berberViewModel);
-        //}
 
         public IActionResult Index()
         {
-            //var berberler=_context.Berberler
-            //    .Include(b => b.Yetenekler)
-            //    .ToList();
-            return View(/*berberler*/);
+            return View();
+        }
+
+        // Hizmetlerimiz sayfasý
+        public async Task<IActionResult> Hizmetlerimiz()
+        {
+            var hizmetler = await _context.Yetenekler.ToListAsync();
+            return View(hizmetler);
         }
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
