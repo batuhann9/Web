@@ -5,28 +5,73 @@
     ViewData["Title"] = "Kayıt Ol";
 }
 
-<form asp-controller="Hesap" asp-action="Kayit" method="post">
-    <div class="form-group">
-        <label asp-for="FirstName" class="control-label"></label>
-        <input asp-for="FirstName" class="form-control" required />
-        <span asp-validation-for="FirstName" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="LastName" class="control-label"></label>
-        <input asp-for="LastName" class="form-control" required />
-        <span asp-validation-for="LastName" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Email" class="control-label"></label>
-        <input asp-for="Email" class="form-control" required />
-        <span asp-validation-for="Email" class="text-danger"></span>
-    </div>
-    <div class="form-group">
-        <label asp-for="Password" class="control-label"></label>
-        <input asp-for="Password" class="form-control" required />
-        <span asp-validation-for="Password" class="text-danger"></span>
-    </div>
-    <button type="submit" class="btn btn-primary">Kayıt Ol</button>
-</form>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 90vh;">
+    <div class="card shadow-lg p-5 bg-light" style="max-width: 600px; width: 100%;">
+        <h2 class="text-center text-primary fw-bold mb-4">Kayıt Ol</h2>
+        <p class="text-center text-muted mb-4">Yeni bir hesap oluşturun</p>
 
+        <form asp-controller="Hesap" asp-action="Kayit" method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
 
+            <div class="form-group mb-3">
+                <label asp-for="FirstName" class="form-label fw-semibold">Ad</label>
+                <input asp-for="FirstName" class="form-control" placeholder="Adınızı girin" required />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="LastName" class="form-label fw-semibold">Soyad</label>
+                <input asp-for="LastName" class="form-control" placeholder="Soyadınızı girin" required />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Email" class="form-label fw-semibold">E-posta</label>
+                <input asp-for="Email" class="form-control" placeholder="E-posta adresinizi girin" required />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label asp-for="Password" class="form-label fw-semibold">Şifre</label>
+                <input asp-for="Password" type="password" class="form-control" placeholder="Şifrenizi oluşturun" required />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary w-100 py-2">Kayıt Ol</button>
+            </div>
+        </form>
+
+        <div class="text-center mt-4">
+            <p>Zaten bir hesabınız var mı? <a asp-controller="Hesap" asp-action="Giris" class="text-decoration-none">Giriş Yap</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #f0f2f5, #d6dbe0);
+        height: 100vh;
+        margin: 0;
+    }
+
+    .card {
+        border-radius: 20px;
+    }
+
+    .btn-primary {
+        background-color: #2c3e50;
+        border-color: #2c3e50;
+    }
+
+        .btn-primary:hover {
+            background-color: #1c2b39;
+            border-color: #1c2b39;
+        }
+
+    .form-control:focus {
+        box-shadow: 0 0 10px rgba(44, 62, 80, 0.4);
+        border-color: #2c3e50;
+    }
+
+</style>

@@ -2,45 +2,45 @@
     ViewData["Title"] = "Hizmetlerimiz";
 }
 
-<h1 class="text-center my-4">Hizmetlerimiz</h1>
+<h1 class="text-center my-4 fw-bold hizmet-title">Hizmetlerimiz</h1>
 
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-4 d-flex align-items-stretch">
-            <div class="card hizmet-card">
+            <div class="card hizmet-card shadow-lg">
                 <img src="~/img/sac-tirasi.jpg" class="card-img-top" alt="Saç Tıraşı">
-                <div class="card-body">
-                    <h5 class="card-title">Saç Tıraşı</h5>
+                <div class="card-body text-center">
+                    <h5 class="card-title hizmet-title">Saç Tıraşı</h5>
                     <p class="card-text">Profesyonel, stilinize uygun anatomik saç kesimi.</p>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4 d-flex align-items-stretch">
-            <div class="card hizmet-card">
+            <div class="card hizmet-card shadow-lg">
                 <img src="~/img/sakal-tirasi.jpg" class="card-img-top" alt="Sakal Tıraşı">
-                <div class="card-body">
-                    <h5 class="card-title">Sakal Tıraşı</h5>
+                <div class="card-body text-center">
+                    <h5 class="card-title hizmet-title">Sakal Tıraşı</h5>
                     <p class="card-text">Özenli ve stilinize uygun sakal tıraşı hizmeti.</p>
                 </div>
             </div>
         </div>
 
         <div class="col-md-4 d-flex align-items-stretch">
-            <div class="card hizmet-card">
+            <div class="card hizmet-card shadow-lg">
                 <img src="~/img/boya.jpg" class="card-img-top" alt="Saç Boyama">
-                <div class="card-body">
-                    <h5 class="card-title">Saç Boyama</h5>
+                <div class="card-body text-center">
+                    <h5 class="card-title hizmet-title">Saç Boyama</h5>
                     <p class="card-text">Sadece saçınıza değil, hayatınıza renk katıyoruz.</p>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-4 d-flex align-items-stretch justify-content-center mt-5 son-kart">
-            <div class="card hizmet-card">
+        <div class="col-md-4 d-flex align-items-stretch justify-content-center son-kart">
+            <div class="card hizmet-card shadow-lg">
                 <img src="~/img/cilt-bakimi.jpg" class="card-img-top" alt="Cilt Bakımı">
-                <div class="card-body">
-                    <h5 class="card-title">Cilt Bakımı</h5>
+                <div class="card-body text-center">
+                    <h5 class="card-title hizmet-title">Cilt Bakımı</h5>
                     <p class="card-text">Cildinize hak ettiği tazeliği kazandırın.</p>
                 </div>
             </div>
@@ -50,34 +50,57 @@
 
 @section Scripts {
     <script>
-
+        // Ekstra script gerekiyorsa buraya eklenebilir
     </script>
 }
 
 <style>
+    /* Arkaplan ve Sayfa Düzeni */
+    body {
+        background: linear-gradient(135deg, #f3f4f6, #d1d5db);
+        height: 100%;
+    }
+
+    h1 {
+        margin-bottom: 50px;
+    }
+
+    /* Kart Tasarımı */
     .hizmet-card {
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border-radius: 10px;
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+        border-radius: 15px;
         overflow: hidden;
+        background-color: #fff;
     }
 
         .hizmet-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            transform: translateY(-10px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.3);
         }
 
         .hizmet-card img {
             height: 250px;
             object-fit: cover;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
         }
 
         .hizmet-card .card-body {
-            min-height: 150px;
+            min-height: 160px;
         }
 
+    /* Başlık ve Kart Metinleri */
+    .hizmet-title {
+        color: #2c3e50; /* Kart başlıkları ve sayfa başlığı aynı renk */
+        font-weight: 600;
+    }
+
+    .card-text {
+        color: #666; /* Açık gri metin rengi */
+    }
+
+    /* Son Kart Düzeni */
     .son-kart {
-        margin-top: 40px;
+        margin-top: 60px;
     }
 </style>
