@@ -4,22 +4,51 @@
     ViewData["Title"] = "Berber Kazançları";
 }
 
-<h2>Berber Kazançları</h2>
+<div class="container mt-5">
+    <div class="card shadow-lg p-4 bg-light">
+        <h2 class="text-center mb-4 text-primary fw-bold">Berber Kazançları</h2>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Berber Adı</th>
-            <th>Toplam Kazanç</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model.BerberKazancListesi)
-        {
-            <tr>
-                <td>@item.BerberAd</td>
-                <td>@item.ToplamKazanc.ToString("C")</td>  <!-- Para birimi formatında -->
-            </tr>
-        }
-    </tbody>
-</table>
+        <table class="table table-hover text-center">
+            <thead class="table-dark">
+                <tr>
+                    <th>Berber Adı</th>
+                    <th>Toplam Kazanç</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.BerberKazancListesi)
+                {
+                    <tr>
+                        <td>@item.BerberAd</td>
+                        <td>@item.ToplamKazanc.ToString("C")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #f3f4f6, #d6dbe0);
+        height: 100%;
+        margin: 0;
+    }
+
+    .card {
+        border-radius: 15px;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: #e8e8e8;
+    }
+
+    h2.text-primary {
+        color: #2c3e50 !important;
+    }
+</style>
+

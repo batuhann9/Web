@@ -115,12 +115,12 @@ namespace BerberSalonu.Controllers
                         role = "user",
                         content = new object[]
                         {
-                            new { type = "text", text = "Bana uygun bir saç modeli veya bir saç rengi önerir misin?" },
+                            new { type = "text", text = "Paylaþtýðým görsele uygun bir saç modeli veya bir saç rengi önerir misin?" },
                             new { type = "image_url", image_url = new { url = $"data:image/jpeg;base64,{base64Image}" } }
                         }
                     }
                 },
-                max_tokens = 150
+                max_tokens = 500
             };
 
             var json = JsonConvert.SerializeObject(requestBody);

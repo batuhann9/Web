@@ -116,42 +116,101 @@ namespace BerberSalonu.Controllers
             return RedirectToAction(nameof(YetenekEkle), new { berberId = model.BerberId });
         }
 
-        // Yetenek Silme İşlemi
-        //[HttpGet("Berber/YetenekSil")]
-        //public async Task<IActionResult> YetenekSil([FromQuery] int? berberId)
-        //{
-        //    var model = await YetenekViewModelHazirla(berberId, true);
-        //    return View(model);
-        //}
+    
+       [HttpGet("Berber/YetenekSil")]
+        public async Task<IActionResult> YetenekSil([FromQuery] int? berberId)
+        {
+            var model = await YetenekViewModelHazirla(berberId, true);
+            return View(model);
+        }
 
-        //[HttpPost("Berber/YetenekSil")]
-        //public async Task<IActionResult> YetenekSil(BerberYetenekEkleViewModel model)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        model = await YetenekViewModelHazirla(model.BerberId, true);
-        //        return View(model);
-        //    }
+        [HttpPost("Berber/YetenekSil")]
+        public async Task<IActionResult> YetenekSil(BerberYetenekEkleViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model = await YetenekViewModelHazirla(model.BerberId, true);
+                return View(model);
+            }
 
-        //    var mevcutIliski = await _context.BerberYetenekler
-        //        .FirstOrDefaultAsync(b => b.BerberId == model.BerberId && b.YetenekId == model.YetenekId);
+            var mevcutIliski = await _context.BerberYetenekler
+                .FirstOrDefaultAsync(b => b.BerberId == model.BerberId && b.YetenekId == model.YetenekId);
 
-        //    if (mevcutIliski == null)
-        //    {
-        //        TempData["Hata"] = "Bu yetenek zaten ekli değil!";
-        //        model = await YetenekViewModelHazirla(model.BerberId, true);
-        //        return View(model);
-        //    }
+            if (mevcutIliski == null)
+            {
+                TempData["Hata"] = "Bu yetenek zaten ekli değil!";
+                model = await YetenekViewModelHazirla(model.BerberId, true);
+                return View(model);
+            }
 
-        //    _context.BerberYetenekler.Remove(mevcutIliski);
-        //    await _context.SaveChangesAsync();
+            _context.BerberYetenekler.Remove(mevcutIliski);
+            await _context.SaveChangesAsync();
 
-        //    TempData["Başarı"] = "Berberden yetenek silme başarılı!";
-        //    return RedirectToAction(nameof(YetenekSil), new { berberId = model.BerberId });
-        //}
+            TempData["Başarı"] = "Berberden yetenek silme başarılı!";
+            return RedirectToAction(nameof(YetenekSil), new { berberId = model.BerberId });
+        }
+
+        [HttpGet("Berber/Sil")]
+        public async Task<IActionResult> BerberSil()
+        {
+            var model = new BerberSilViewModel
+            {
+                BerberlerSelectList = await _context.Berberler
+                    .Include(b => b.Kullanici)
+                    .Select(b => new SelectListItem
+                    {
+                        Value = b.Id.ToString(),
+                        Text = $"{b.Kullanici.Ad} {b.Kullanici.Soyad}"
+                    }).ToListAsync()
+            };
+
+            return View(model);
+        }
+
+        [HttpPost("Berber/Sil")]
+        public async Task<IActionResult> BerberSil(BerberSilViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model.BerberlerSelectList = await _context.Berberler
+                    .Include(b => b.Kullanici)
+                    .Select(b => new SelectListItem
+                    {
+                        Value = b.Id.ToString(),
+                        Text = $"{b.Kullanici.Ad} {b.Kullanici.Soyad}"
+                    }).ToListAsync();
+
+                return View(model);
+            }
+
+            var berber = await _context.Berberler
+                .FirstOrDefaultAsync(b => b.Id == model.BerberId);
+
+            if (berber == null)
+            {
+                TempData["Hata"] = "Berber bulunamadı!";
+                return RedirectToAction(nameof(BerberSil));
+            }
+
+            // Randevuları kontrol et
+            var aktifRandevu = await _context.Randevular
+                .AnyAsync(r => r.BerberId == model.BerberId && r.RandevuTarihi >= DateOnly.FromDateTime(DateTime.Now));
+
+            if (aktifRandevu)
+            {
+                TempData["Hata"] = "Bu berberin aktif randevuları olduğu için silinemez!";
+                return RedirectToAction(nameof(BerberSil));
+            }
+
+            _context.Berberler.Remove(berber);
+            await _context.SaveChangesAsync();
+
+            TempData["Başarı"] = "Berber başarıyla silindi!";
+            return RedirectToAction(nameof(BerberSil));
+        }
 
         // Kazançları Listele
-        [HttpGet("kazanclarilistele")]
+        [HttpGet("Berber/KazanclariListele")]
         public async Task<IActionResult> KazanclariListele()
         {
             var kazancListesi = await _context.Randevular
