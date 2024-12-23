@@ -1,0 +1,86 @@
+﻿@using BerberSalonu.ViewModel
+@model BerberYetenekEkleViewModel
+
+@{
+    ViewData["Title"] = "Berberden Yetenek Sil";
+}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 90vh;">
+    <div class="card shadow-lg p-5 bg-light" style="max-width: 600px; width: 100%;">
+        <h2 class="text-center fw-bold mb-4">
+            <span class="text-dark">Berber</span> Yetenek Sil
+        </h2>
+        <p class="text-center text-muted mb-4">Bir berberin yeteneklerini silmek için listeden seçim yapın.</p>
+
+        @if (TempData["Başarı"] != null)
+        {
+            <div class="alert alert-success text-center"> @TempData["Başarı"] </div>
+        }
+        else if (TempData["Hata"] != null)
+        {
+            <div class="alert alert-danger text-center"> @TempData["Hata"] </div>
+        }
+
+        <form asp-action="YetenekSil" method="get" class="mb-4">
+            <div class="form-group mb-3">
+                <label asp-for="BerberId" class="form-label fw-semibold">Berber Seçin:</label>
+                <select asp-for="BerberId" class="form-control" asp-items="@Model.BerberlerSelectList" onchange="this.form.submit()">
+                    <option value="" disabled selected>Bir berber seçin</option>
+                </select>
+            </div>
+        </form>
+
+        @if (Model.YeteneklerSelectList != null && Model.YeteneklerSelectList.Any())
+        {
+            <form asp-action="YetenekSil" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="BerberId" />
+
+                <div class="form-group mb-3">
+                    <label asp-for="YetenekId" class="form-label fw-semibold">Silmek İstediğiniz Yetenek:</label>
+                    <select asp-for="YetenekId"
+                            class="form-control"
+                            asp-items="@Model.YeteneklerSelectList">
+                        <option value="" disabled selected>Bir yetenek seçin</option>
+                    </select>
+                    <span asp-validation-for="YetenekId" class="text-danger"></span>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-danger w-100 py-2">Yetenek Sil</button>
+                </div>
+            </form>
+        }
+        else
+        {
+            <div class="alert alert-warning text-center">Bu berberin yeteneği bulunmamaktadır.</div>
+        }
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #f0f2f5, #d6dbe0);
+        height: 100vh;
+        margin: 0;
+    }
+
+    .card {
+        border-radius: 20px;
+    }
+
+    .btn-danger {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+
+        .btn-danger:hover {
+            background-color: #a93226;
+            border-color: #a93226;
+        }
+
+    .form-control:focus {
+        box-shadow: 0 0 10px rgba(192, 57, 43, 0.4);
+        border-color: #c0392b;
+    }
+</style>
