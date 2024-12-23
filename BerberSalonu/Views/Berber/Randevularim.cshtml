@@ -4,57 +4,99 @@
     ViewBag.Title = "Onaylanmış Randevularım";
 }
 
-<h2>Onaylanmış Randevularım</h2>
+<div class="container mt-5">
+    <div class="card shadow-lg p-4 bg-light">
+        <h2 class="text-center fw-bold mb-4">
+            <span class="text-dark">Onaylanmış</span> Randevularım
+        </h2>
+        <p class="text-center text-muted">Onaylanan randevularınızı buradan görüntüleyin ve yönetin</p>
 
-<div class="container mt-4">
-    @if (TempData["Hata"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Hata"]</div>
-    }
-    @if (TempData["Mesaj"] != null)
-    {
-        <div class="alert alert-success">@TempData["Mesaj"]</div>
-    }
+        @if (TempData["Hata"] != null)
+        {
+            <div class="alert alert-danger text-center fw-semibold py-2 px-4 rounded-3"> @TempData["Hata"] </div>
+        }
+        @if (TempData["Mesaj"] != null)
+        {
+            <div class="alert alert-success text-center fw-semibold py-2 px-4 rounded-3"> @TempData["Mesaj"] </div>
+        }
 
-    @if (Model.Any())
-    {
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>Müşteri</th>
-                    <th>Yetenek</th>
-                    <th>Tarih</th>
-                    <th>Saat</th>
-                    <th>Durum</th>
-                    <th>İşlem</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var randevu in Model)
-                {
-                    <tr>
-                        <td>@($"{randevu.Musteri.Kullanici.Ad} {randevu.Musteri.Kullanici.Soyad}")</td>
-                        <td>@randevu.Yetenek.Name</td>
-                        <td>@randevu.RandevuTarihi.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
-                        <td>@randevu.RandevuSaati.ToString("HH:mm")</td>
-                        <td>
-                            <span class="badge bg-success">Onaylandı</span>
-                        </td>
-                        <td>
-                            <form asp-action="RandevuIptal" method="post" asp-route-id="@randevu.Id" onsubmit="return confirm('Bu randevuyu iptal etmek istediğinize emin misiniz?');">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-danger btn-sm">İptal Et</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <div class="alert alert-info">
-            Henüz onaylanmış randevunuz bulunmamaktadır.
-        </div>
-    }
+        @if (Model.Any())
+        {
+            <div class="table-responsive mt-4">
+                <table class="table table-hover table-bordered align-middle text-center">
+                    <thead class="bg-dark text-white">
+                        <tr>
+                            <th scope="col">Müşteri</th>
+                            <th scope="col">Yetenek</th>
+                            <th scope="col">Tarih</th>
+                            <th scope="col">Saat</th>
+                            <th scope="col">Durum</th>
+                            <th scope="col">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        @foreach (var randevu in Model)
+                        {
+                            <tr>
+                                <td>@($"{randevu.Musteri.Kullanici.Ad} {randevu.Musteri.Kullanici.Soyad}")</td>
+                                <td>@randevu.Yetenek.Name</td>
+                                <td>@randevu.RandevuTarihi.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
+                                <td>@randevu.RandevuSaati.ToString("HH:mm")</td>
+                                <td>
+                                    <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">Onaylandı</span>
+                                </td>
+                                <td>
+                                    <form asp-action="RandevuIptal" method="post" asp-route-id="@randevu.Id" onsubmit="return confirm('Bu randevuyu iptal etmek istediğinize emin misiniz?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold">İptal Et</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center mt-4 py-3 px-5 rounded-3">
+                Henüz onaylanmış randevunuz bulunmamaktadır.
+            </div>
+        }
+    </div>
 </div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #f0f2f5, #d6dbe0);
+        height: 100vh;
+        margin: 0;
+    }
+
+    .card {
+        border-radius: 20px;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+    }
+
+    .btn-danger {
+        background-color: #c0392b;
+        border-color: #c0392b;
+        transition: all 0.3s ease;
+    }
+
+        .btn-danger:hover {
+            background-color: #a93226;
+            border-color: #a93226;
+        }
+
+    .badge {
+        font-size: 0.9rem;
+    }
+
+    .alert {
+        border-radius: 10px;
+    }
+</style>
