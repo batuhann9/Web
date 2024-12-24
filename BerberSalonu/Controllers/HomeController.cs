@@ -115,7 +115,7 @@ namespace BerberSalonu.Controllers
                         role = "user",
                         content = new object[]
                         {
-                            new { type = "text", text = "Paylaþtýðým görsele uygun bir saç modeli veya bir saç rengi önerir misin?" },
+                            new { type = "text", text = "Paylaþtýðým görselin detaylarýna göre analiz yaparak, yüz þekli, ten rengi ve tarzýnýza en uygun saç modeli veya rengi hakkýnda keskin ve net bir öneri sun." },
                             new { type = "image_url", image_url = new { url = $"data:image/jpeg;base64,{base64Image}" } }
                         }
                     }

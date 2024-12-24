@@ -113,13 +113,11 @@
                             @if (User.Identity.IsAuthenticated)
                             {
                                 var rol = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-                                var ad = User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value;
-                                var soyad = User.FindFirst(System.Security.Claims.ClaimTypes.Surname)?.Value;
                                 var rolClass = rol == "Admin" ? "admin-text" : rol == "Berber" ? "berber-text" : "musteri-text";
 
                                 <li class="nav-item mt-2">
                                     <p class="kullanici-bilgi">
-                                        <span class="rol @rolClass">@rol</span> - <span>@ad @soyad</span>
+                                        <span class="rol @rolClass">@rol</span> - <span>@await Component.InvokeAsync("UserInfo")</span>
                                     </p>
                                 </li>
 
