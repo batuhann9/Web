@@ -4,64 +4,106 @@
     ViewBag.Title = "Randevularım";
 }
 
-<h2>Randevularım</h2>
+<div class="container mt-5">
+    <div class="card shadow-lg p-5 bg-light rounded-4">
+        <h2 class="text-center fw-bold mb-4">
+            <span class="text-dark">Randevularım</span>
+        </h2>
+        <p class="text-center text-muted">Tüm randevularınızı buradan görüntüleyebilir ve yönetebilirsiniz</p>
 
-<div class="container mt-4">
-    @if (TempData["Hata"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Hata"]</div>
-    }
-    @if (TempData["Mesaj"] != null)
-    {
-        <div class="alert alert-success">@TempData["Mesaj"]</div>
-    }
+        @if (TempData["Hata"] != null)
+        {
+            <div class="alert alert-danger text-center fw-semibold py-2 px-4 rounded-3"> @TempData["Hata"] </div>
+        }
+        @if (TempData["Mesaj"] != null)
+        {
+            <div class="alert alert-success text-center fw-semibold py-2 px-4 rounded-3"> @TempData["Mesaj"] </div>
+        }
 
-    @if (Model.Any())
-    {
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>Berber</th>
-                    <th>Yetenek</th>
-                    <th>Tarih</th>
-                    <th>Saat</th>
-                    <th>Onay Durumu</th>
-                    <th>İşlem</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var randevu in Model)
-                {
-                    <tr>
-                        <td>@($"{randevu.Berber.Kullanici.Ad} {randevu.Berber.Kullanici.Soyad}")</td>
-                        <td>@randevu.Yetenek.Name</td>
-                        <td>@randevu.RandevuTarihi.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
-                        <td>@randevu.RandevuSaati.ToString("HH:mm")</td>
-                        <td>
-                            @if (randevu.IsOnaylandi)
-                            {
-                                <span class="badge bg-success">Onaylandı</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-warning">Onay Bekliyor</span>
-                            }
-                        </td>
-                        <td>
-                            <form asp-action="RandevuIptal" method="post" asp-route-id="@randevu.Id" onsubmit="return confirm('Bu randevuyu iptal etmek istediğinize emin misiniz?');">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-danger btn-sm">İptal Et</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-    else
-    {
-        <div class="alert alert-info">
-            Henüz randevunuz bulunmamaktadır.
-        </div>
-    }
+        @if (Model.Any())
+        {
+            <div class="table-responsive mt-4">
+                <table class="table table-hover table-bordered align-middle text-center">
+                    <thead class="bg-dark text-white">
+                        <tr>
+                            <th scope="col">Berber</th>
+                            <th scope="col">Yetenek</th>
+                            <th scope="col">Tarih</th>
+                            <th scope="col">Saat</th>
+                            <th scope="col">Onay Durumu</th>
+                            <th scope="col">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        @foreach (var randevu in Model)
+                        {
+                            <tr>
+                                <td>@($"{randevu.Berber.Kullanici.Ad} {randevu.Berber.Kullanici.Soyad}")</td>
+                                <td>@randevu.Yetenek.Name</td>
+                                <td>@randevu.RandevuTarihi.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
+                                <td>@randevu.RandevuSaati.ToString("HH:mm")</td>
+                                <td>
+                                    @if (randevu.IsOnaylandi)
+                                    {
+                                        <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">Onaylandı</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning fs-6 px-3 py-2 rounded-pill">Onay Bekliyor</span>
+                                    }
+                                </td>
+                                <td>
+                                    <form asp-action="RandevuIptal" method="post" asp-route-id="@randevu.Id" onsubmit="return confirm('Bu randevuyu iptal etmek istediğinize emin misiniz?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold shadow-sm">İptal Et</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center mt-4 py-3 px-5 rounded-3">
+                Henüz randevunuz bulunmamaktadır.
+            </div>
+        }
+    </div>
 </div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #eef1f5, #d7dde2);
+        height: 100vh;
+        margin: 0;
+    }
+
+    .card {
+        border-radius: 15px;
+    }
+
+    .btn-danger {
+        background-color: #c0392b;
+        border-color: #c0392b;
+        transition: all 0.3s ease;
+    }
+
+        .btn-danger:hover {
+            background-color: #a93226;
+            border-color: #a93226;
+        }
+
+    .badge {
+        font-size: 0.9rem;
+    }
+
+    .alert {
+        border-radius: 10px;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+    }
+</style>
