@@ -1,30 +1,96 @@
 ﻿@model List<BerberViewModel>
 
-<h1>Berber Listesi</h1>
+@{
+    ViewData["Title"] = "Berber Listesi";
+}
 
-@if (Model != null && Model.Any())
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Ad Soyad</th>
-                <th>Email</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var berber in Model)
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%; /* Sayfa tam ekran olacak şekilde ayarlandı */
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f3f4f6, #d6dbe0);
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            border-radius: 15px;
+            width: 100%;
+            max-width: 1200px; /* Kart genişliği artırıldı */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .table th, .table td {
+            vertical-align: middle;
+            padding: 1rem; /* Hücre içi boşluk artırıldı */
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: #e8e8e8;
+        }
+
+        h1, h2.text-primary {
+            color: #2c3e50 !important;
+        }
+
+        .alert {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="card shadow-lg p-5 bg-light">
+            <h1 class="text-center fw-bold mb-4">Berber Listesi</h1>
+            <p class="text-center text-muted">Kayıtlı berberlerin listesini aşağıda görebilirsiniz.</p>
+
+            @if (Model != null && Model.Any())
             {
-                <tr>
-                    <td>@berber.Id</td>
-                    <td>@berber.AdSoyad</td>
-                    <td>@berber.Email</td>
-                </tr>
+                <div class="table-responsive mt-4">
+                    <table class="table table-hover table-bordered text-center">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col" style="width: 10%;">#</th>
+                                <th scope="col" style="width: 45%;">Ad Soyad</th>
+                                <th scope="col" style="width: 45%;">Email</th>
+                            </tr>
+                        </thead>
+                        <tbody class="table-light">
+                            @foreach (var berber in Model)
+                            {
+                                <tr>
+                                    <td>@berber.Id</td>
+                                    <td>@berber.AdSoyad</td>
+                                    <td>@berber.Email</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             }
-        </tbody>
-    </table>
-}
-else
-{
-    <div class="alert alert-warning">Henüz berber kaydı bulunmamaktadır.</div>
-}
+            else
+            {
+                <div class="alert alert-warning text-center mt-4 py-3 px-5">
+                    Henüz berber kaydı bulunmamaktadır.
+                </div>
+            }
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
