@@ -1,0 +1,30 @@
+﻿@model List<BerberViewModel>
+
+<h1>Berber Listesi</h1>
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Ad Soyad</th>
+                <th>Email</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var berber in Model)
+            {
+                <tr>
+                    <td>@berber.Id</td>
+                    <td>@berber.AdSoyad</td>
+                    <td>@berber.Email</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-warning">Henüz berber kaydı bulunmamaktadır.</div>
+}

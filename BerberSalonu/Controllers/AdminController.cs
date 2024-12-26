@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http;
+using System.Text.Json;
 
 namespace BerberSalonu.Controllers
 {
@@ -13,12 +15,15 @@ namespace BerberSalonu.Controllers
     public class AdminController : Controller
     {
         private readonly BerberContext _context;
+        private readonly HttpClient _httpClient;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AdminController(BerberContext context)
+        public AdminController(BerberContext context, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpClient = httpClientFactory.CreateClient("AuthorizedClient");
+            _httpContextAccessor = httpContextAccessor;
         }
-
         public IActionResult Index()
         {
             return View();
@@ -116,8 +121,8 @@ namespace BerberSalonu.Controllers
             return RedirectToAction(nameof(YetenekEkle), new { berberId = model.BerberId });
         }
 
-    
-       [HttpGet("Berber/YetenekSil")]
+
+        [HttpGet("Berber/YetenekSil")]
         public async Task<IActionResult> YetenekSil([FromQuery] int? berberId)
         {
             var model = await YetenekViewModelHazirla(berberId, true);
@@ -251,5 +256,55 @@ namespace BerberSalonu.Controllers
             }
             return model;
         }
+        [HttpGet("BerberListesi")]
+        public async Task<IActionResult> BerberListesi()
+        {
+            // 1. Kullanıcı oturum açmış mı kontrol et
+            var isAuthenticated = _httpContextAccessor.HttpContext.User.Identity.IsAuthenticated;
+            if (!isAuthenticated)
+            {
+                return RedirectToAction("Giris", "Hesap");
+            }
+
+            // 2. Cookie'yi HttpClient'a taşı
+            var cookies = _httpContextAccessor.HttpContext.Request.Cookies;
+
+            var cookieContainer = new System.Net.CookieContainer();
+            foreach (var cookie in cookies)
+            {
+                cookieContainer.Add(new Uri("https://localhost:7186"), new System.Net.Cookie(cookie.Key, cookie.Value));
+            }
+
+            var handler = new HttpClientHandler()
+            {
+                UseCookies = true,
+                CookieContainer = cookieContainer
+            };
+
+            var client = new HttpClient(handler)
+            {
+                BaseAddress = new Uri("https://localhost:7186")
+            };
+
+            // 3. API'ye istek gönder
+            var response = await client.GetAsync("/api/admin/berberler");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                var berberler = JsonSerializer.Deserialize<List<BerberViewModel>>(jsonResponse, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                return View("BerberListesi", berberler);
+            }
+            else
+            {
+                Console.WriteLine($"API Hatası: {response.StatusCode}");
+                ViewBag.ErrorMessage = "API'den veri alınamadı.";
+                return View("BerberListesi", new List<BerberViewModel>());
+            }
+        }
     }
-}
+    }
