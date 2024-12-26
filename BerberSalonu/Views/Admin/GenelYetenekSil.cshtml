@@ -1,15 +1,72 @@
 ﻿@using BerberSalonu.ViewModel
 @model YetenekSilViewModel
 
-<h2>Yetenek Sil</h2>
+@{
+    ViewData["Title"] = "Yetenek Sil";
+}
 
-<form asp-action="GenelYetenekSil" method="post">
-    <div class="mb-3">
-        <label asp-for="YetenekId" class="form-label">Yetenek Seçin</label>
-        <select asp-for="YetenekId" asp-items="Model.YeteneklerSelectList" class="form-control" required>
-            <option value="">Seçiniz...</option>
-        </select>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 90vh;">
+    <div class="card shadow-lg p-5 bg-light" style="max-width: 600px; width: 100%;">
+        <h2 class="text-center fw-bold mb-4">
+            <span class="text-dark">Genel</span> Yetenek Sil
+        </h2>
+        <p class="text-center text-muted mb-4">Bir yetenek seçerek silme işlemini gerçekleştirin.</p>
+
+        @if (TempData["Başarı"] != null)
+        {
+            <div class="alert alert-success text-center"> @TempData["Başarı"] </div>
+        }
+        else if (TempData["Hata"] != null)
+        {
+            <div class="alert alert-danger text-center"> @TempData["Hata"] </div>
+        }
+
+        <form asp-action="GenelYetenekSil" method="post">
+            @Html.AntiForgeryToken()
+
+            <div class="form-group mb-3">
+                <label asp-for="YetenekId" class="form-label fw-semibold">Silmek İstediğiniz Yetenek:</label>
+                <select asp-for="YetenekId" asp-items="Model.YeteneklerSelectList"
+                        class="form-control" required>
+                    <option value="" disabled selected>Bir yetenek seçin</option>
+                </select>
+                <span asp-validation-for="YetenekId" class="text-danger"></span>
+            </div>
+
+            <div class="alert alert-warning text-center">
+                Seçilen yetenek silindiğinde bu yeteneğe bağlı tüm onay bekleyen randevular iptal edilecektir.
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-danger w-100 py-2">Yetenek Sil</button>
+            </div>
+        </form>
     </div>
+</div>
 
-    <button type="submit" class="btn btn-danger">Sil</button>
-</form>
+<style>
+    body {
+        background: linear-gradient(135deg, #f0f2f5, #d6dbe0);
+        height: 100vh;
+        margin: 0;
+    }
+
+    .card {
+        border-radius: 20px;
+    }
+
+    .btn-danger {
+        background-color: #c0392b;
+        border-color: #c0392b;
+    }
+
+        .btn-danger:hover {
+            background-color: #a93226;
+            border-color: #a93226;
+        }
+
+    .form-control:focus {
+        box-shadow: 0 0 10px rgba(192, 57, 43, 0.4);
+        border-color: #c0392b;
+    }
+</style>
