@@ -46,10 +46,15 @@
                     <span asp-validation-for="YetenekId" class="text-danger"></span>
                 </div>
 
+                <div class="alert alert-warning text-center">
+                    Bu yetenek silindiğinde ilgili onay bekleyen randevular otomatik olarak iptal edilecektir.
+                </div>
+
                 <div class="text-center mt-4">
                     <button type="submit" class="btn btn-danger w-100 py-2">Yetenek Sil</button>
                 </div>
             </form>
+        
         }
         else
         {

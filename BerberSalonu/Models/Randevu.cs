@@ -24,6 +24,8 @@ namespace BerberSalonu.Models
 
         [Required(ErrorMessage = "Lütfen bir randevu saati seçin.")]
         public TimeOnly RandevuSaati { get; set; }
-        public bool IsOnaylandi { get; set; } = false;
+        
+        [Required]
+        public RandevuDurum Durum { get; set; } //+2 farklı durum için enum
     }
 }

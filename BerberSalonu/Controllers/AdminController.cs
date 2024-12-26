@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http;
 using System.Text.Json;
 
 namespace BerberSalonu.Controllers
@@ -121,7 +120,6 @@ namespace BerberSalonu.Controllers
             return RedirectToAction(nameof(YetenekEkle), new { berberId = model.BerberId });
         }
 
-
         [HttpGet("Berber/YetenekSil")]
         public async Task<IActionResult> YetenekSil([FromQuery] int? berberId)
         {
@@ -148,10 +146,40 @@ namespace BerberSalonu.Controllers
                 return View(model);
             }
 
+            // Onaylanmış randevuları kontrol et
+            var onaylanmisRandevuVar = await _context.Randevular
+                .AnyAsync(r => r.BerberId == model.BerberId
+                            && r.YetenekId == model.YetenekId
+                            && r.Durum == RandevuDurum.Onaylandi);
+
+            if (onaylanmisRandevuVar)
+            {
+                TempData["Hata"] = "Bu yeteneğe ait onaylanmış randevular olduğu için silinemez!";
+                model = await YetenekViewModelHazirla(model.BerberId, true);
+                return View(model);
+            }
+
+            // Onay bekleyen randevuları iptal et
+            var onayBekleyenRandevular = await _context.Randevular
+                .Where(r => r.BerberId == model.BerberId
+                         && r.YetenekId == model.YetenekId
+                         && r.Durum == RandevuDurum.OnayBekliyor)
+                .ToListAsync();
+
+            if (onayBekleyenRandevular.Any())
+            {
+                foreach (var randevu in onayBekleyenRandevular)
+                {
+                    randevu.Durum = RandevuDurum.IptalEdildi;
+                }
+                await _context.SaveChangesAsync();  // Randevuların iptal edilmesi kaydediliyor
+            }
+
+            // Yetenek ve berber ilişkisini sil
             _context.BerberYetenekler.Remove(mevcutIliski);
             await _context.SaveChangesAsync();
 
-            TempData["Başarı"] = "Berberden yetenek silme başarılı!";
+            TempData["Başarı"] = "Berberden yetenek başarıyla silindi. Onay bekleyen randevular iptal edildi.";
             return RedirectToAction(nameof(YetenekSil), new { berberId = model.BerberId });
         }
 
@@ -171,7 +199,6 @@ namespace BerberSalonu.Controllers
 
             return View(model);
         }
-
         [HttpPost("Berber/Sil")]
         public async Task<IActionResult> BerberSil(BerberSilViewModel model)
         {
@@ -197,31 +224,46 @@ namespace BerberSalonu.Controllers
                 return RedirectToAction(nameof(BerberSil));
             }
 
-            // Randevuları kontrol et
-            var aktifRandevu = await _context.Randevular
-                .AnyAsync(r => r.BerberId == model.BerberId && r.RandevuTarihi >= DateOnly.FromDateTime(DateTime.Now));
+            // Onaylanmış randevuları kontrol et
+            var onaylanmisRandevuVar = await _context.Randevular
+                .AnyAsync(r => r.BerberId == model.BerberId && r.Durum == RandevuDurum.Onaylandi);
 
-            if (aktifRandevu)
+            if (onaylanmisRandevuVar)
             {
-                TempData["Hata"] = "Bu berberin aktif randevuları olduğu için silinemez!";
+                TempData["Hata"] = "Bu berberin onaylanmış randevuları olduğu için silinemez!";
                 return RedirectToAction(nameof(BerberSil));
             }
 
+            // Onay bekleyen randevuları iptal et
+            var onayBekleyenRandevular = await _context.Randevular
+                .Where(r => r.BerberId == model.BerberId && r.Durum == RandevuDurum.OnayBekliyor)
+                .ToListAsync();
+
+            if (onayBekleyenRandevular.Any())
+            {
+                foreach (var randevu in onayBekleyenRandevular)
+                {
+                    randevu.Durum = RandevuDurum.IptalEdildi; // Randevu durumu iptal olarak güncelleniyor
+                }
+                await _context.SaveChangesAsync(); // İptallerin veritabanına kaydedilmesi
+            }
+
+            // Berberi sil
             _context.Berberler.Remove(berber);
             await _context.SaveChangesAsync();
 
-            TempData["Başarı"] = "Berber başarıyla silindi!";
+            TempData["Başarı"] = "Berber başarıyla silindi ve onay bekleyen randevuları iptal edildi!";
             return RedirectToAction(nameof(BerberSil));
         }
 
-        // Kazançları Listele
         [HttpGet("Berber/KazanclariListele")]
         public async Task<IActionResult> KazanclariListele()
         {
             var kazancListesi = await _context.Randevular
                 .Include(r => r.Berber)
+                .ThenInclude(b => b.Kullanici)
                 .Include(r => r.Yetenek)
-                .Where(r => r.IsOnaylandi == true)
+                .Where(r => r.Durum == RandevuDurum.Gerceklesti || r.Durum == RandevuDurum.Onaylandi)
                 .GroupBy(r => r.BerberId)
                 .Select(g => new BerberKazanciViewModel
                 {
@@ -306,5 +348,128 @@ namespace BerberSalonu.Controllers
                 return View("BerberListesi", new List<BerberViewModel>());
             }
         }
+
+        // Yetenek Ekleme Sayfası (GET)
+        [HttpGet("Berber/GenelYetenekEkle")]
+        public IActionResult GenelYetenekEkle()
+        {
+            return View(new YetenekViewModel());
+        }
+
+        // Yetenek Ekleme (POST)
+        [HttpPost("Berber/GenelYetenekEkle")]
+        public async Task<IActionResult> GenelYetenekEkle(YetenekViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Hata"] = "Lütfen formu eksiksiz doldurun.";
+                return View(model);
+            }
+
+            try
+            {
+                // Aynı isimde yetenek var mı kontrol et
+                var mevcutYetenek = await _context.Yetenekler
+                    .FirstOrDefaultAsync(y => y.Name == model.Name);
+
+                if (mevcutYetenek != null)
+                {
+                    TempData["Hata"] = "Bu yetenek zaten eklenmiş.";
+                    return View(model);
+                }
+
+                // Yetenek oluştur
+                var yeniYetenek = new Yetenek
+                {
+                    Name = model.Name,
+                    Price = model.Price,
+                    Sure = model.Sure
+                };
+
+                _context.Yetenekler.Add(yeniYetenek);
+                await _context.SaveChangesAsync();
+
+                TempData["Başarı"] = "Yetenek başarıyla eklendi.";
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                TempData["Hata"] = "Bir hata oluştu: " + ex.Message;
+                return View(model);
+            }
+        }
+
+        // Yetenek Silme İşlemi
+        [HttpGet("Berber/GenelYetenekSil")]
+        public async Task<IActionResult> GenelYetenekSil()
+        {
+            var model = new YetenekSilViewModel
+            {
+                YeteneklerSelectList = await _context.Yetenekler
+                    .Select(y => new SelectListItem
+                    {
+                        Value = y.Id.ToString(),
+                        Text = y.Name
+                    })
+                    .ToListAsync()
+            };
+
+            return View(model);
+        }
+
+        [HttpPost("Berber/GenelYetenekSil")]
+        public async Task<IActionResult> GenelYetenekSil(YetenekSilViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model.YeteneklerSelectList = await _context.Yetenekler
+                    .Select(y => new SelectListItem
+                    {
+                        Value = y.Id.ToString(),
+                        Text = y.Name
+                    })
+                    .ToListAsync();
+                return View(model);
+            }
+
+            var yetenek = await _context.Yetenekler.FindAsync(model.YetenekId);
+            if (yetenek == null)
+            {
+                TempData["Hata"] = "Yetenek bulunamadı!";
+                return RedirectToAction(nameof(GenelYetenekSil));
+            }
+
+            // Onaylanmış randevuları kontrol et
+            var onaylanmisRandevuVar = await _context.Randevular
+                .AnyAsync(r => r.YetenekId == model.YetenekId && r.Durum == RandevuDurum.Onaylandi);
+
+            if (onaylanmisRandevuVar)
+            {
+                TempData["Hata"] = "Bu yeteneğe ait onaylanmış randevular olduğu için silinemez!";
+                return RedirectToAction(nameof(GenelYetenekSil));
+            }
+
+            // Onay bekleyen randevuları iptal et
+            var onayBekleyenRandevular = await _context.Randevular
+                .Where(r => r.YetenekId == model.YetenekId && r.Durum == RandevuDurum.OnayBekliyor)
+                .ToListAsync();
+
+            if (onayBekleyenRandevular.Any())
+            {
+                foreach (var randevu in onayBekleyenRandevular)
+                {
+                    randevu.Durum = RandevuDurum.IptalEdildi;  // Bekleyen randevular iptal ediliyor
+                }
+                await _context.SaveChangesAsync();  // İptal işlemleri veritabanına kaydediliyor
+            }
+
+            // Yetenek siliniyor
+            _context.Yetenekler.Remove(yetenek);
+            await _context.SaveChangesAsync();
+
+            TempData["Başarı"] = "Yetenek başarıyla silindi ve onay bekleyen randevuları iptal edildi!";
+            return RedirectToAction(nameof(GenelYetenekSil));
+        }
+
     }
-    }
+}

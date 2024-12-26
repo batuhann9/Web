@@ -1,0 +1,54 @@
+﻿@model BerberSalonu.ViewModel.YetenekViewModel
+
+@{
+    ViewData["Title"] = "Yetenek Ekle";
+}
+
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 90vh;">
+    <div class="card shadow-lg p-5 bg-light" style="max-width: 600px; width: 100%;">
+        <h2 class="text-center fw-bold mb-4">
+            <span class="text-dark">Yetenek</span> Ekle
+        </h2>
+
+        @if (TempData["Başarı"] != null)
+        {
+            <div class="alert alert-success text-center"> @TempData["Başarı"] </div>
+        }
+        @if (TempData["Hata"] != null)
+        {
+            <div class="alert alert-danger text-center"> @TempData["Hata"] </div>
+        }
+
+        <form asp-controller="Admin" asp-action="GenelYetenekEkle" method="post">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Name" class="form-label fw-semibold">Yetenek Adı</label>
+                <input asp-for="Name" class="form-control" placeholder="Yetenek ismi girin" required />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Price" class="form-label fw-semibold">Fiyat (₺)</label>
+                <input asp-for="Price" type="number" class="form-control" placeholder="Fiyat girin" required />
+                <span asp-validation-for="Price" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label asp-for="Sure" class="form-label fw-semibold">Süre (Dakika)</label>
+                <input asp-for="Sure" type="number" class="form-control" placeholder="Süre (dakika)" required />
+                <span asp-validation-for="Sure" class="text-danger"></span>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary w-100 py-2">Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+
+    </script>
+}

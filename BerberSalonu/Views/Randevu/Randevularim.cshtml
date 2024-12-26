@@ -30,33 +30,58 @@
                             <th scope="col">Yetenek</th>
                             <th scope="col">Tarih</th>
                             <th scope="col">Saat</th>
-                            <th scope="col">Onay Durumu</th>
+                            <th scope="col">Durum</th>
                             <th scope="col">İşlem</th>
                         </tr>
                     </thead>
                     <tbody class="table-light">
                         @foreach (var randevu in Model)
                         {
+                            var randevuTarihSaati = randevu.RandevuTarihi.ToDateTime(randevu.RandevuSaati);
+                            var suAn = DateTime.Now;
+                            if (randevuTarihSaati <= suAn && randevu.Durum == BerberSalonu.Models.RandevuDurum.Onaylandi)
+                            {
+                                randevu.Durum = BerberSalonu.Models.RandevuDurum.Gerceklesti;
+                            }
+
                             <tr>
                                 <td>@($"{randevu.Berber.Kullanici.Ad} {randevu.Berber.Kullanici.Soyad}")</td>
                                 <td>@randevu.Yetenek.Name</td>
                                 <td>@randevu.RandevuTarihi.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
                                 <td>@randevu.RandevuSaati.ToString("HH:mm")</td>
                                 <td>
-                                    @if (randevu.IsOnaylandi)
+                                    @if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Onaylandi)
                                     {
                                         <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">Onaylandı</span>
                                     }
-                                    else
+                                    else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.OnayBekliyor)
                                     {
                                         <span class="badge bg-warning fs-6 px-3 py-2 rounded-pill">Onay Bekliyor</span>
                                     }
+                                    else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.IptalEdildi)
+                                    {
+                                        <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill">İptal Edildi</span>
+                                    }
+                                    else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Gerceklesti)
+                                    {
+                                        <span class="badge bg-info fs-6 px-3 py-2 rounded-pill">Gerçekleşti</span>
+                                    }
                                 </td>
                                 <td>
-                                    <form asp-action="RandevuIptal" method="post" asp-route-id="@randevu.Id" onsubmit="return confirm('Bu randevuyu iptal etmek istediğinize emin misiniz?');">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold shadow-sm">İptal Et</button>
-                                    </form>
+                                    @if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Gerceklesti || randevu.Durum == BerberSalonu.Models.RandevuDurum.IptalEdildi)
+                                    {
+                                        <form asp-action="RandevuSil" method="post" asp-route-id="@randevu.Id" onsubmit="return confirm('Bu randevuyu silmek istediğinize emin misiniz?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger btn-sm px-3 fw-semibold">Sil</button>
+                                        </form>
+                                    }
+                                    @if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Onaylandi || randevu.Durum == BerberSalonu.Models.RandevuDurum.OnayBekliyor)
+                                    {
+                                        <form asp-action="RandevuIptal" method="post" asp-route-id="@randevu.Id" onsubmit="return confirm('Bu randevuyu iptal etmek istediğinize emin misiniz?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-warning btn-sm px-3 fw-semibold">İptal Et</button>
+                                        </form>
+                                    }
                                 </td>
                             </tr>
                         }
