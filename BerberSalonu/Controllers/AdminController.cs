@@ -471,5 +471,23 @@ namespace BerberSalonu.Controllers
             return RedirectToAction(nameof(GenelYetenekSil));
         }
 
+        [HttpGet("adminrandevulistele")]
+        public async Task<IActionResult> AdminRandevuListele()
+        {
+            // Tüm randevuları çekiyoruz ve ilişkili berber, müşteri ve yetenek bilgilerini yüklüyoruz
+            var randevular = await _context.Randevular
+                .Include(r => r.Berber)
+                .ThenInclude(b => b.Kullanici)  // Berberin kullanıcı bilgisi
+                .Include(r => r.Musteri)
+                .ThenInclude(m => m.Kullanici)  // Müşteri bilgisi
+                .Include(r => r.Yetenek)        // Randevu yeteneği
+                .OrderByDescending(r => r.RandevuTarihi)
+                .ThenBy(r => r.RandevuSaati)
+                .ToListAsync();
+
+            // View'a randevu listesini gönder
+            return View(randevular);
+        }
+
     }
 }

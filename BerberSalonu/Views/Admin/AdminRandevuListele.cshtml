@@ -1,0 +1,29 @@
+﻿@model IEnumerable<BerberSalonu.Models.Randevu>
+
+<h2>Tüm Randevular</h2>
+
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Berber</th>
+            <th>Müşteri</th>
+            <th>Yetenek</th>
+            <th>Tarih</th>
+            <th>Saat</th>
+            <th>Durum</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var randevu in Model)
+        {
+            <tr>
+                <td>@randevu.Berber.Kullanici.Ad @randevu.Berber.Kullanici.Soyad</td>
+                <td>@randevu.Musteri.Kullanici.Ad @randevu.Musteri.Kullanici.Soyad</td>
+                <td>@randevu.Yetenek.Name</td>
+                <td>@randevu.RandevuTarihi.ToString("dd/MM/yyyy")</td>
+                <td>@randevu.RandevuSaati</td>
+                <td>@randevu.Durum</td>
+            </tr>
+        }
+    </tbody>
+</table>

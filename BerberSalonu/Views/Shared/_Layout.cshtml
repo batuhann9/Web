@@ -82,7 +82,7 @@
             <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
                 <div class="container-fluid">
                     <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">
-                        <img src="~/img/logo.png" alt="Logo" width="40" class="me-2">Berber Salonu
+                        <img src="~/img/logo.png" alt="Logo" width="40" class="me-2">Bırbır Salon
                     </a>
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -151,10 +151,13 @@
                                         <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="YetenekSil">Berber Yetenek Sil</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="BerberListesi">BeRberleri Listele</a>
+                                        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="BerberListesi">BeRber Listele</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="KazanclariListele">Kazançları Listele</a>
+                                        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="AdminRandevuListele">Randevu Listele</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="KazanclariListele">Kazanç Listele</a>
                                     </li>
                                 }
                                 if (rol == "Berber")
@@ -181,7 +184,7 @@
 
         <footer class="text-center mt-auto">
             <div class="container">
-                <p class="mb-0">&copy; 2024 Berber Salonu - Tüm Hakları Saklıdır</p>
+                <p class="mb-0">&copy; 2024 Bırbır Salon - Tüm Hakları Saklıdır</p>
                 <p>
                     <a href="#">Gizlilik Politikası</a> |
                     <a href="#">İletişim</a> |
