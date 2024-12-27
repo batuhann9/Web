@@ -1,29 +1,101 @@
-﻿@model IEnumerable<BerberSalonu.Models.Randevu>
+﻿@model List<BerberSalonu.Models.Randevu>
 
-<h2>Tüm Randevular</h2>
+@{
+    ViewBag.Title = "Tüm Randevular";
+}
 
-<table class="table table-bordered table-striped">
-    <thead>
-        <tr>
-            <th>Berber</th>
-            <th>Müşteri</th>
-            <th>Yetenek</th>
-            <th>Tarih</th>
-            <th>Saat</th>
-            <th>Durum</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var randevu in Model)
+<div class="container mt-5">
+    <div class="card shadow-lg p-4 bg-light">
+        <h2 class="text-center fw-bold mb-4">
+            <span class="text-dark">Tüm</span> Randevular
+        </h2>
+        <p class="text-center text-muted">Tüm berberlerin randevularını buradan görüntüleyebilirsiniz</p>
+
+        @if (TempData["Hata"] != null)
         {
-            <tr>
-                <td>@randevu.Berber.Kullanici.Ad @randevu.Berber.Kullanici.Soyad</td>
-                <td>@randevu.Musteri.Kullanici.Ad @randevu.Musteri.Kullanici.Soyad</td>
-                <td>@randevu.Yetenek.Name</td>
-                <td>@randevu.RandevuTarihi.ToString("dd/MM/yyyy")</td>
-                <td>@randevu.RandevuSaati</td>
-                <td>@randevu.Durum</td>
-            </tr>
+            <div class="alert alert-danger text-center fw-semibold py-2 px-4 rounded-3"> @TempData["Hata"] </div>
         }
-    </tbody>
-</table>
+        @if (TempData["Mesaj"] != null)
+        {
+            <div class="alert alert-success text-center fw-semibold py-2 px-4 rounded-3"> @TempData["Mesaj"] </div>
+        }
+
+        @if (Model.Any())
+        {
+            <div class="table-responsive mt-4">
+                <table class="table table-hover table-bordered align-middle text-center">
+                    <thead class="bg-dark text-white">
+                        <tr>
+                            <th scope="col">Berber</th>
+                            <th scope="col">Müşteri</th>
+                            <th scope="col">Yetenek</th>
+                            <th scope="col">Tarih</th>
+                            <th scope="col">Saat</th>
+                            <th scope="col">Durum</th>
+                        </tr>
+                    </thead>
+                    <tbody class="table-light">
+                        @foreach (var randevu in Model)
+                        {
+                            <tr>
+                                <td>@($"{randevu.Berber.Kullanici.Ad} {randevu.Berber.Kullanici.Soyad}")</td>
+                                <td>@($"{randevu.Musteri.Kullanici.Ad} {randevu.Musteri.Kullanici.Soyad}")</td>
+                                <td>@randevu.Yetenek.Name</td>
+                                <td>@randevu.RandevuTarihi.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
+                                <td>@randevu.RandevuSaati.ToString("HH:mm")</td>
+                                <td>
+                                    @if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Onaylandi)
+                                    {
+                                        <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">Onaylandı</span>
+                                    }
+                                    else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.OnayBekliyor)
+                                    {
+                                        <span class="badge bg-warning fs-6 px-3 py-2 rounded-pill">Onay Bekliyor</span>
+                                    }
+                                    else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.IptalEdildi)
+                                    {
+                                        <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill">İptal Edildi</span>
+                                    }
+                                    else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Gerceklesti)
+                                    {
+                                        <span class="badge bg-info fs-6 px-3 py-2 rounded-pill">Gerçekleşti</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info text-center mt-4 py-3 px-5 rounded-3">
+                Henüz randevu bulunmamaktadır.
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    body {
+        background: linear-gradient(135deg, #f0f2f5, #d6dbe0);
+        height: 100vh;
+        margin: 0;
+    }
+
+    .card {
+        border-radius: 20px;
+    }
+
+    .table th, .table td {
+        vertical-align: middle;
+    }
+
+    .badge {
+        font-size: 0.9rem;
+    }
+
+    .alert {
+        border-radius: 10px;
+    }
+</style>
