@@ -489,5 +489,41 @@ namespace BerberSalonu.Controllers
             return View(randevular);
         }
 
+        [HttpPost("randevu/reddet")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RandevuReddet(int id)
+        {
+            var randevu = await _context.Randevular.FindAsync(id);
+            if (randevu != null && randevu.Durum == RandevuDurum.Onaylandi)
+            {
+                randevu.Durum = RandevuDurum.IptalEdildi;
+                _context.Randevular.Update(randevu);
+                await _context.SaveChangesAsync();
+                TempData["Mesaj"] = "Randevu başarıyla iptal edildi.";
+            }
+            else
+            {
+                TempData["Hata"] = "Randevu bulunamadı veya iptal edilemez durumda.";
+            }
+            return RedirectToAction("AdminRandevuListele");
+        }
+
+        [HttpPost("randevu/sil")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RandevuSil(int id)
+        {
+            var randevu = await _context.Randevular.FindAsync(id);
+            if (randevu != null && (randevu.Durum == RandevuDurum.Gerceklesti || randevu.Durum == RandevuDurum.IptalEdildi))
+            {
+                _context.Randevular.Remove(randevu);
+                await _context.SaveChangesAsync();
+                TempData["Mesaj"] = "Randevu başarıyla silindi.";
+            }
+            else
+            {
+                TempData["Hata"] = "Randevu bulunamadı veya silinemez durumda.";
+            }
+            return RedirectToAction("AdminRandevuListele");
+        }
     }
 }
