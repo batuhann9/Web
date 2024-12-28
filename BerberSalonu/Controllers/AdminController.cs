@@ -474,18 +474,30 @@ namespace BerberSalonu.Controllers
         [HttpGet("adminrandevulistele")]
         public async Task<IActionResult> AdminRandevuListele()
         {
-            // Tüm randevuları çekiyoruz ve ilişkili berber, müşteri ve yetenek bilgilerini yüklüyoruz
             var randevular = await _context.Randevular
-                .Include(r => r.Berber)
-                .ThenInclude(b => b.Kullanici)  // Berberin kullanıcı bilgisi
-                .Include(r => r.Musteri)
-                .ThenInclude(m => m.Kullanici)  // Müşteri bilgisi
-                .Include(r => r.Yetenek)        // Randevu yeteneği
-                .OrderByDescending(r => r.RandevuTarihi)
-                .ThenBy(r => r.RandevuSaati)
-                .ToListAsync();
+                 .Include(r => r.Musteri)
+                 .ThenInclude(m => m.Kullanici)
+                 .Include(r => r.Berber)
+                 .ThenInclude(b => b.Kullanici)
+                 .Include(r => r.Yetenek)
+                 .OrderBy(r => r.RandevuTarihi)
+                 .ThenBy(r => r.RandevuSaati)
+                 .ToListAsync();
 
-            // View'a randevu listesini gönder
+            var suAn = DateTime.Now;
+
+            foreach (var randevu in randevular)
+            {
+                var randevuTarihSaati = randevu.RandevuTarihi.ToDateTime(randevu.RandevuSaati);
+                if (randevuTarihSaati <= suAn && randevu.Durum == RandevuDurum.Onaylandi)
+                {
+                    randevu.Durum = RandevuDurum.Gerceklesti;
+                    _context.Randevular.Update(randevu);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
             return View(randevular);
         }
 

@@ -36,53 +36,52 @@
                         </tr>
                     </thead>
                     <tbody class="table-light">
-                        @foreach (var randevu in Model)
-                        {
-                            <tr>
-                                <td>@($"{randevu.Berber.Kullanici.Ad} {randevu.Berber.Kullanici.Soyad}")</td>
-                                <td>@($"{randevu.Musteri.Kullanici.Ad} {randevu.Musteri.Kullanici.Soyad}")</td>
-                                <td>@randevu.Yetenek.Name</td>
-                                <td>@randevu.RandevuTarihi.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
-                                <td>@randevu.RandevuSaati.ToString("HH:mm")</td>
-                                <td>
-                                    @if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Onaylandi)
-                                    {
-                                        <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">Onaylandı</span>
-                                    }
-                                    else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.OnayBekliyor)
-                                    {
-                                        <span class="badge bg-warning fs-6 px-3 py-2 rounded-pill">Onay Bekliyor</span>
-                                    }
-                                    else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.IptalEdildi)
-                                    {
-                                        <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill">İptal Edildi</span>
-                                    }
-                                    else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Gerceklesti)
-                                    {
-                                        <span class="badge bg-info fs-6 px-3 py-2 rounded-pill">Gerçekleşti</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Onaylandi)
-                                    {
-                                        <form method="post" asp-action="RandevuReddet" asp-route-id="@randevu.Id" style="display:inline;">
-                                            <button type="submit" class="btn btn-danger btn-sm">
-                                                İptal Et
-                                            </button>
-                                        </form>
-                                    }
-
-                                    @if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Gerceklesti || randevu.Durum == BerberSalonu.Models.RandevuDurum.IptalEdildi)
-                                    {
-                                        <form method="post" asp-action="RandevuSil" asp-route-id="@randevu.Id" style="display:inline;">
-                                            <button type="submit" class="btn btn-outline-secondary btn-sm">
-                                                Sil
-                                            </button>
-                                        </form>
-                                    }
-                                </td>
-                            </tr>
-                        }
+                      @foreach (var randevu in Model)
+{
+    <tr>
+        <td>
+            @(randevu.Berber?.Kullanici != null
+                ? $"{randevu.Berber.Kullanici.Ad} {randevu.Berber.Kullanici.Soyad}"
+                : "Bilinmiyor")
+        </td>
+        <td>
+            @(randevu.Musteri?.Kullanici != null
+                ? $"{randevu.Musteri.Kullanici.Ad} {randevu.Musteri.Kullanici.Soyad}"
+                : "Bilinmiyor")
+        </td>
+        <td>@(randevu.Yetenek?.Name ?? "Bilinmiyor")</td>
+        <td>@randevu.RandevuTarihi.ToDateTime(TimeOnly.MinValue).ToString("dd/MM/yyyy")</td>
+        <td>@randevu.RandevuSaati.ToString("HH:mm")</td>
+        <td>
+            @if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Onaylandi)
+            {
+                <span class="badge bg-success fs-6 px-3 py-2 rounded-pill">Onaylandı</span>
+            }
+            else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.OnayBekliyor)
+            {
+                <span class="badge bg-warning fs-6 px-3 py-2 rounded-pill">Onay Bekliyor</span>
+            }
+            else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.IptalEdildi)
+            {
+                <span class="badge bg-danger fs-6 px-3 py-2 rounded-pill">İptal Edildi</span>
+            }
+            else if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Gerceklesti)
+            {
+                <span class="badge bg-info fs-6 px-3 py-2 rounded-pill">Gerçekleşti</span>
+            }
+        </td>
+        <td>
+            @if (randevu.Durum == BerberSalonu.Models.RandevuDurum.Onaylandi)
+            {
+                <form method="post" asp-action="RandevuReddet" asp-route-id="@randevu.Id" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm">
+                        İptal Et
+                    </button>
+                </form>
+            }
+        </td>
+    </tr>
+}
                     </tbody>
                 </table>
             </div>

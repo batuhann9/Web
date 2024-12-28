@@ -212,10 +212,14 @@ namespace BerberSalonu.Controllers
 
             return View(randevular);
         }
-
-        public IActionResult RandevuIptal(int id)
+        [HttpPost("Randevu/Iptal")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RandevuIptal(int id)
         {
-            var randevu = _context.Randevular.Include(r => r.Berber).FirstOrDefault(r => r.Id == id);
+            var randevu = await _context.Randevular
+                .Include(r => r.Berber)      // Berber ilişkisini dahil et
+                .Include(r => r.Musteri)     // Müşteri ilişkisini dahil et
+                .FirstOrDefaultAsync(r => r.Id == id);
 
             if (randevu == null)
             {
@@ -223,17 +227,19 @@ namespace BerberSalonu.Controllers
                 return RedirectToAction("Randevularim");
             }
 
+            // Randevu daha önce iptal edilmişse tekrar iptal edilmez
             if (randevu.Durum == RandevuDurum.IptalEdildi)
             {
                 TempData["Hata"] = "Bu randevu zaten iptal edilmiş.";
                 return RedirectToAction("Randevularim");
             }
 
-            // Onaylanmış randevuları da iptal etmeye izin ver
+            // Sadece onaylanmış veya onay bekleyen randevular iptal edilebilir
             if (randevu.Durum == RandevuDurum.Onaylandi || randevu.Durum == RandevuDurum.OnayBekliyor)
             {
                 randevu.Durum = RandevuDurum.IptalEdildi;
-                _context.SaveChanges();
+                _context.Randevular.Update(randevu);  // Güncellemeyi belirt
+                await _context.SaveChangesAsync();    // Asenkron kaydet
                 TempData["Mesaj"] = "Randevu başarıyla iptal edildi.";
             }
             else
@@ -244,7 +250,7 @@ namespace BerberSalonu.Controllers
             return RedirectToAction("Randevularim");
         }
 
-        [HttpPost]
+        [HttpPost("Randevu/Sil")]
         public async Task<IActionResult> RandevuSil(int id)
         {
             var randevu = await _context.Randevular.FindAsync(id);
